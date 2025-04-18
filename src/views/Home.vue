@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import ChatList from "../components/ChatList.vue"
+import ChatList from "../components/NavSection.vue"
 </script>
 
 <style scoped>
