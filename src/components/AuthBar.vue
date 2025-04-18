@@ -38,7 +38,7 @@
     <!-- Brand -->
     <router-link to="/" class="btn btn-outline-primary mb-4 d-flex align-items-center gap-2">
       <i class="bi bi-chat-dots-fill fs-4"></i>
-      <span class="fw-bold">Chat App</span>
+      <span class="fw-bold">ShutApp</span>
     </router-link>
   </nav>
 </template>
