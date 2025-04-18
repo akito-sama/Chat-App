@@ -50,21 +50,21 @@ let groups = ref([]);
 let emit = defineEmits(["chat-selected"]);
 
 let filtered_groups = computed(() => {
-return groups.value.filter((group) =>
-    group.groupName.toLowerCase().includes(search.value.toLowerCase())
-);
+    return groups.value.filter((group) =>
+        group.groupName.toLowerCase().includes(search.value.toLowerCase())
+    );
 });
 
 let groupsRef = collection(db, "groups");
 onMounted(async () => {
-let querySnapshot = await getDocs(groupsRef);
-querySnapshot.forEach((doc) => {
-    groups.value.push({ id: doc.id, ...doc.data() });
-});
+    let querySnapshot = await getDocs(groupsRef);
+    querySnapshot.forEach((doc) => {
+        groups.value.push({ id: doc.id, ...doc.data() });
+    });
 });
 
 function selectChat(id) {
-emit("chat-selected", id);
+    emit("chat-selected", id);
 }
 </script>
   

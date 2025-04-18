@@ -17,7 +17,7 @@
     </div>
 
     <!-- Input bar -->
-    <div class="border-top p-2 bg-white">
+    <div class="writeSection border-top p-2 bg-white">
       <input
         type="text"
         v-model="newMessage"
@@ -109,8 +109,8 @@ async function sendMessage() {
 </script>
 
 <style scoped>
-/* Optional: keep scroll position at the bottom */
-ul {
-  scroll-behavior: smooth;
+.writeSection {
+  background-color: white;
+
 }
 </style>
