@@ -28,7 +28,7 @@
 
 <script setup>
 import { db } from "@/firebase";
-import { addDoc, collection, getDocs } from "firebase/firestore";
+import { addDoc, arrayUnion, collection, doc, getDocs, updateDoc } from "firebase/firestore";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import UserItem from "../components/UserItem.vue";
@@ -55,6 +55,7 @@ const toggleDropdown = () => {
 const router = useRouter();
 
 const handleSubmit = async () => {
+    try {
     let request = await addDoc(groupsRef, {
         groupName: name.value,
         groupBio: text.value,
@@ -63,7 +64,28 @@ const handleSubmit = async () => {
         groupAdmins: [authuser.value.uid],
         isPrivate: false,
         lastMessage: "",
+    });}
+    catch (err) {
+        console.log("can't add group", err);
+    }
+    try {
+    for (let i = 0; i < selected.value.length; i++) {
+        let userRef = doc(db, "users", selected.value[i]);
+        updateDoc(userRef, {
+            groups: arrayUnion(request.id),
+        });
+    }
+    let userRef = doc(db, "users", authuser.value.uid);
+    updateDoc(userRef, {
+        groups: arrayUnion(request.id),
     });
+    } catch (err) {
+        console.log("can't modify users", err);
+    }
+    selected.value = [];
+    name.value = '';
+    text.value = '';
+    dropdownOpen.value = false;
     router.push("/");
 };
 
