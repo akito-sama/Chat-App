@@ -1,14 +1,16 @@
 <template>
-  <div class="d-flex align-items-center gap-2">
+  <div @click="showMessages = true; " class="d-flex align-items-center gap-2">
     <img :src="groupPDP" alt="" width="52px" height="52px" />
     <p>{{ groupName }}</p>
   </div>
+  <MessageList v-if="showMessages" :group-i-d="GroupId" :user-i-d="user?.uid"/>
 </template>
 
 <script setup>
 import { db } from "@/firebase";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, inject } from "vue";
+import MessageList from "@/components/MessageList.vue";
 
 let props = defineProps({
   GroupId: String,
@@ -16,6 +18,8 @@ let props = defineProps({
 
 let groupName = ref("");
 let groupPDP = ref("");
+let showMessages = ref(false);
+let user = inject('userDoc');
 
 const groupRef = doc(db, "groups", props.GroupId);
 onSnapshot(groupRef, (docSnap) => {
