@@ -1,55 +1,67 @@
 <template>
-  <form @submit.prevent="handleSubmit">
-    <input
-      type="text"
-      class="form-control mb-2"
-      v-model="name"
-      placeholder="Group name"
-    />
-    <textarea
-      class="form-control mb-2"
-      v-model="text"
-      rows="4"
-      placeholder="Group description"
-    ></textarea>
-    <input type="file" class="form-control mb-3" />
+  <div class="card shadow-sm p-4 mx-auto my-4" style="max-width: 600px;">
+    <h4 class="mb-4">Create New Group</h4>
 
-    <button type="submit" class="btn btn-primary me-2">Send</button>
+    <form @submit.prevent="handleSubmit">
+      <!-- Group Name -->
+      <div class="mb-3">
+        <label class="form-label">Group Name</label>
+        <input type="text" class="form-control" v-model="name" placeholder="Enter group name" required />
+      </div>
 
-    <!-- DROPDOWN -->
-    <div class="dropdown d-inline">
-      <button
-        class="btn btn-secondary dropdown-toggle"
-        type="button"
-        @click="toggleDropdown"
-        :aria-expanded="dropdownOpen"
-      >
-        add members
-      </button>
-      <ul class="dropdown-menu show" v-if="dropdownOpen">
-        <input
-          type="text"
-          class="form-control mb-2"
-          v-model="search"
-          placeholder="Search"
-        />
-        <li
-          v-for="user in filtered_users"
-          :key="user.id"
-          class="dropdown-item"
-          @click="
-            () => {
-              selected.push(user.id);
-              console.log('Youre my special');
-            }
-          "
-        >
-          <UserItem :UserId="user.id" />
-        </li>
-      </ul>
+      <!-- Group Description -->
+      <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" v-model="text" rows="4" placeholder="Group description"></textarea>
+      </div>
+
+      <!-- Group Image Upload -->
+      <div class="mb-3">
+        <label class="form-label">Group Image</label>
+        <input type="file" class="form-control" />
+      </div>
+
+      <!-- Buttons Row -->
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-send-fill me-1"></i> Create Group
+        </button>
+
+        <!-- Add Members Dropdown -->
+        <div class="dropdown">
+          <button
+            class="btn btn-secondary dropdown-toggle"
+            type="button"
+            @click="toggleDropdown"
+            :aria-expanded="dropdownOpen"
+          >
+            <i class="bi bi-person-plus-fill me-1"></i> Add Members
+          </button>
+
+          <ul class="dropdown-menu p-2 shadow show" v-if="dropdownOpen">
+            <!-- Search Users -->
+            <input type="text" class="form-control mb-2" v-model="search" placeholder="Search users..." />
+            <li
+              v-for="user in filtered_users"
+              :key="user.id"
+              class="dropdown-item d-flex align-items-center gap-2"
+              @click="() => { selected.push(user.id) }"
+              style="cursor: pointer;"
+            >
+              <UserItem :UserId="user.id" />
+            </li>
+          </ul>
+        </div>
+      </div>
+    </form>
+
+    <!-- Selected Members -->
+    <div v-if="selected.length" class="alert alert-info">
+      <strong>Selected Members:</strong> {{ selected.length }}
     </div>
-  </form>
+  </div>
 </template>
+
 
 <script setup>
 import { db } from "@/firebase";

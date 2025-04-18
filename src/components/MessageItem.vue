@@ -1,50 +1,55 @@
 <template>
-  <div v-if="message.authorID === curUser.uid" class="text-end">
+  <div v-if="message.authorID === userID" class="text-end mb-3">
     <span class="badge bg-primary">You</span>
-    <p class="message-text">{{ message.text }}</p>
-    <span class="readAll">{{ (allRead()) ? "Read" : "Not read"}}</span>
+    <div class="bg-light p-2 rounded d-inline-block mt-1">
+      {{ message.text }}
+    </div>
+    <div class="small text-muted mt-1">
+      {{ allRead() ? "Read" : "Not read" }}
+    </div>
   </div>
-  <div v-else class="text-start">
-    <img :src="user.pdp" class="rounded-circle me-2" width="40" height="40"/>
-    <span class="badge bg-secondary">{{ user.firstname + ' ' + user.lastname }}</span>
-    <p class="message-text">{{ message.text }}</p>
+  <div v-else class="text-start mb-3">
+    <span class="badge bg-secondary">{{ message.authorName }}</span>
+    <div class="bg-body-secondary p-2 rounded d-inline-block mt-1">
+      {{ message.text }}
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, inject } from "vue"
-import { db } from "@/firebase"
-import {getDoc, doc} from "firebase/firestore";
+import { ref, onMounted } from "vue";
+import { db } from "@/firebase";
+import { getDoc, doc } from "firebase/firestore";
 
 const props = defineProps({
   messageID: {
     type: String,
-    required: true
+    required: true,
+  },
+  userID: {
+    type: String,
+    required: true,
   },
   groupID: {
     type: String,
-    required: true
+    required: true,
   },
 });
 
-const user = ref({});
-const curUser = inject('userDoc');
-
-function allRead(){
-  console.log(message.value)
-  for (let id in message.value.readby){
+function allRead() {
+  for (let id in message.value.readby) {
     if (!message.value.readby[id]) return false;
   }
   return true;
 }
+
 const message = ref({});
-onMounted(async () => {
+onMounted(() => {
   const messageDoc = doc(db, "groups", props.groupID, "messages", props.messageID);
-  await getDoc(messageDoc).then((doc) => {
-    message.value = doc.data();
+  getDoc(messageDoc).then((docSnap) => {
+    message.value = docSnap.data();
   });
-  const q = await getDoc(doc(db, "users", message.value.authorID));
-  user.value = q.data();
-  console.log("uservalue "+user.value);
-})
+});
 </script>
+
+<style scoped></style>
