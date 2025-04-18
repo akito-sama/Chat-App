@@ -5,7 +5,7 @@
     </div>
     <ul v-else>
       <li v-for="message in messages" :key="message.id">
-        <message-item :group-i-d="groupID" :userID :messageID="message.id"/>
+        <message-item :group-i-d="groupID" :messageID="message.id"/>
       </li>
     </ul>
   </div>
