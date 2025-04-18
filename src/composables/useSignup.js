@@ -6,7 +6,8 @@ import { getFirestore, doc, setDoc } from 'firebase/firestore';
 const useSignup = () => {
   const email = ref('');
   const password = ref('');
-  const username = ref('');
+  const firstname = ref('');
+  const lastname = ref('');
   const bio = ref('');
   const pdp = ref('');
   const birthday = ref(Date(0));
@@ -21,7 +22,7 @@ const useSignup = () => {
         alert("Please enter a valid email address from UM6P.");
         return;
       }
-      if (!username.value.trim()) {
+      if (!firstname.value.trim() || !lastname.value.trim()) {
         alert("Full name cannot be empty");
         return;
       }
@@ -34,12 +35,13 @@ const useSignup = () => {
 
       // Update Firebase Auth profile
       await updateProfile(user, {
-        displayName: username.value,
+        displayName: firstname.value + ' ' + lastname.value,
       });
 
       // Add user to Firestore
       await setDoc(doc(db, 'users', user.uid), {
-        username: username.value,
+        firstname: firstname.value,
+        lastname: lastname.value,
         email: email.value,
         bio: bio.value,
         isOnline: true,
@@ -51,14 +53,14 @@ const useSignup = () => {
       });
 
       console.log('Registered and user data saved to Firestore.');
-      router.push('/');
+      await router.push('/');
     } catch (err) {
       console.error('Registration error:', err);
       error.value = err.message;
     }
   };
 
-  return { email, password, username, bio, birthday, error, pdp, register };
+  return { email, password, firstname, lastname, bio, birthday, error, pdp, register };
 };
 
 export default useSignup;
