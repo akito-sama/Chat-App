@@ -5,14 +5,18 @@ import Login from "../views/Login.vue"
 import Private from "../views/Private.vue"
 import User from "../views/User.vue"
 import Notification from "../views/Notifs.vue"
-import Group from "../views/Group.vue"
-
+import CreateGroup from "../views/CreateGroup.vue"
 
 const routes = [
   {
     path: '/',
     name: 'home',
     component: Home
+  },
+  {
+    path: '/create-group',
+    name: 'createGroup',
+    component: CreateGroup
   },
   {
     path: '/login',
@@ -31,11 +35,6 @@ const routes = [
     path: '/private/:userId',
     name: 'private',
     component: Private,
-  },
-  {
-    path: '/group/:groupId',
-    name: 'group',
-    component: Group,
   },
   {
     path: '/notifs',
