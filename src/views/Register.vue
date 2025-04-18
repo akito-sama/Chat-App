@@ -3,11 +3,11 @@
       <form @submit.prevent="register" class="bg-light p-4 rounded shadow-sm">
         <div class="mb-2">
           <label for="firstname" class="form-label text-brown">First name :</label>
-          <input type="text" id="firstname" placeholder="Username" v-model="firstname" class="form-control" />
+          <input type="text" id="firstname" placeholder="First name" v-model="firstname" class="form-control" />
         </div>
         <div class="mb-2">
           <label for="lastname" class="form-label text-brown">Last name :</label>
-          <input type="text" id="lastname" placeholder="Username" v-model="lastname" class="form-control" />
+          <input type="text" id="lastname" placeholder="Last name" v-model="lastname" class="form-control" />
         </div>
   
         <div class="mb-2">
