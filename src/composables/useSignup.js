@@ -13,7 +13,7 @@ const useSignup = () => {
   const birthday = ref(Date(0));
   const error = ref(null);
   const router = useRouter();
-    const emailRegex = /^[A-Za-z]+\.[A-Za-z]+@um6p\.ma$/;
+  const emailRegex = /^[A-Za-z]+\.[A-Za-z]+@um6p\.ma$/;
 
   const register = async () => {
     error.value = null;

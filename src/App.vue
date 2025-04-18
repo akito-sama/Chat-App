@@ -12,12 +12,10 @@
 
 
 <script setup>
-import '@/firebase' // 👈 This initializes Firebase before anything else
-
 import NavBar from '@/components/AuthBar.vue';
 import { ref, watch, provide } from "vue"
 import { getDoc, doc } from "firebase/firestore"
-import { db } from "@/firebase" // 👈 Use the Firestore instance you already created
+import { db } from "@/firebase" 
 import getUser from "@/composables/getUser"
 
 const { user } = getUser()

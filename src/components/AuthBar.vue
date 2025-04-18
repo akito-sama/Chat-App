@@ -1,14 +1,5 @@
 <template>
   <nav class="d-flex flex-column bg-light border-end vh-100 p-3 shadow-sm" style="width: 250px;">
-    <!-- Brand -->
-    <router-link to="/" class="btn btn-outline-primary mb-4 d-flex align-items-center gap-2">
-      <i class="bi bi-chat-dots-fill fs-4"></i>
-      <span class="fw-bold">Chat App</span>
-    </router-link>
-
-    <!-- Spacer -->
-    <div class="flex-grow-1"></div>
-
     <!-- Auth Dropdown -->
     <div class="dropdown dropend">
       <button
@@ -26,7 +17,7 @@
           width="40"
           height="40"
         />
-        <span class="fw-semibold">{{ logged_in ? userInfo?.username : 'Guest' }}</span>
+        <span class="fw-semibold">{{ logged_in ? userInfo?.firstname : 'Guest' }}</span>
       </button>
 
       <ul class="dropdown-menu" aria-labelledby="userDropdown">
@@ -40,6 +31,15 @@
         </template>
       </ul>
     </div>
+
+     <!-- Spacer -->
+     <div class="flex-grow-1"></div>
+
+    <!-- Brand -->
+    <router-link to="/" class="btn btn-outline-primary mb-4 d-flex align-items-center gap-2">
+      <i class="bi bi-chat-dots-fill fs-4"></i>
+      <span class="fw-bold">Chat App</span>
+    </router-link>
   </nav>
 </template>
 
