@@ -1,32 +1,21 @@
 <template>
   <form @submit.prevent="handleSubmit">
-    <input
-      type="text"
-      class="form-control mb-2"
-      v-model="name"
-      placeholder="Group name"
-    />
-    <textarea
-      class="form-control mb-2"
-      v-model="text"
-      rows="4"
-      placeholder="Group description"
-    ></textarea>
-    <input type="file" class="form-control mb-3" />
-
     <button type="submit" class="btn btn-primary me-2">Send</button>
-
-    <!-- DROPDOWN -->
     <div class="dropdown d-inline">
       <button
         class="btn btn-secondary dropdown-toggle"
         type="button"
         @click="toggleDropdown"
         :aria-expanded="dropdownOpen"
+        :class="{ open: dropdownOpen }"
       >
-        add members
+        find contact
       </button>
-      <ul class="dropdown-menu show" v-if="dropdownOpen">
+      <div>
+        <label for="">Selected User</label>
+        <UserItem v-if="selected != ''" :UserId="selected" :key="selected"/>
+      </div>
+      <ul v-if="dropdownOpen" class="dropdown-menu show">
         <input
           type="text"
           class="form-control mb-2"
@@ -39,8 +28,10 @@
           class="dropdown-item"
           @click="
             () => {
-              selected.push(user.id);
+              selected = user.id;
               console.log('Youre my special');
+              dropdownOpen = false;
+              search = '';
             }
           "
         >
@@ -69,18 +60,16 @@ import getUser from "../composables/getUser";
 const groupsRef = collection(db, "groups");
 const authuser = getUser().user;
 const users = ref([]);
-const name = ref("");
-const text = ref("");
 const search = ref("");
 const dropdownOpen = ref(false);
-const selected = ref([]);
+const selected = ref("");
 const filtered_users = computed(() => {
   return users.value
     .filter((user) => {
       // console.log(authuser.value.uid, user.id);
       return (
         user.firstname.toLowerCase().includes(search.value.toLowerCase()) &&
-        !selected.value.includes(user.id) &&
+        selected.value != user.id &&
         authuser.value.uid != user.id
       );
     })
@@ -93,40 +82,28 @@ const toggleDropdown = () => {
 const router = useRouter();
 
 const handleSubmit = async () => {
-  if (selected.value.length < 1) {
-    alert("You have to choose at least 1 member!");
-    return;
-  }
   try {
     let request = await addDoc(groupsRef, {
-      groupName: name.value,
-      groupBio: text.value,
-      groupMembers: selected.value,
-      groupPDP: "",
-      groupAdmins: [authuser.value.uid],
-      isPrivate: false,
+      groupMembers: [selected.value, authuser.value.uid],
+      isPrivate: true,
       lastMessage: "",
     });
   } catch (err) {
-    console.log("can't add group", err);
+    console.log("can't add private group", err);
   }
   try {
-    for (let i = 0; i < selected.value.length; i++) {
-      let userRef = doc(db, "users", selected.value[i]);
-      updateDoc(userRef, {
-        groups: arrayUnion(request.id),
-      });
-    }
     let userRef = doc(db, "users", authuser.value.uid);
     updateDoc(userRef, {
+      groups: arrayUnion(request.id),
+    });
+    let userRef2 = doc(db, "users", selected.value);
+    updateDoc(userRef2, {
       groups: arrayUnion(request.id),
     });
   } catch (err) {
     console.log("can't modify users", err);
   }
   selected.value = [];
-  name.value = "";
-  text.value = "";
   dropdownOpen.value = false;
   router.push("/");
 };
@@ -148,5 +125,9 @@ onMounted(async () => {
 .dropdown-menu {
   max-height: 300px;
   overflow-y: auto;
+}
+
+.dropdown-toggle.open::after {
+  transform: rotate(180deg);
 }
 </style>
