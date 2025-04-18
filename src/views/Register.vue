@@ -2,8 +2,12 @@
     <div class="register-container">
       <form @submit.prevent="register" class="bg-light p-4 rounded shadow-sm">
         <div class="mb-2">
-          <label for="username" class="form-label text-brown">Username :</label>
-          <input type="text" id="username" placeholder="Username" v-model="username" class="form-control" />
+          <label for="firstname" class="form-label text-brown">First name :</label>
+          <input type="text" id="firstname" placeholder="Username" v-model="firstname" class="form-control" />
+        </div>
+        <div class="mb-2">
+          <label for="lastname" class="form-label text-brown">Last name :</label>
+          <input type="text" id="lastname" placeholder="Username" v-model="lastname" class="form-control" />
         </div>
   
         <div class="mb-2">
@@ -43,7 +47,7 @@
   <script setup>
   import useSignup from '@/composables/useSignup';
   
-  const { email, password, username, bio, birthday, error, pdp, register } = useSignup();
+  const { email, password, firstname, lastname, bio, birthday, error, pdp, register } = useSignup();
   </script>
   
   <style scoped>
@@ -116,4 +120,3 @@
     color: red;
   }
   </style>
-  
