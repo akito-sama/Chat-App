@@ -1,27 +1,23 @@
 <template>
-  <div v-if="message.authorID === userID" class="text-end">
+  <div v-if="message.authorID === curUser.uid" class="text-end">
     <span class="badge bg-primary">You</span>
     <p class="message-text">{{ message.text }}</p>
     <span class="readAll">{{ (allRead()) ? "Read" : "Not read"}}</span>
   </div>
   <div v-else class="text-start">
-    <span></span>
-    <span class="badge bg-secondary">{{ message.authorName }}</span>
+    <img :src="user.pdp" class="rounded-circle me-2" width="40" height="40"/>
+    <span class="badge bg-secondary">{{ user.firstname + ' ' + user.lastname }}</span>
     <p class="message-text">{{ message.text }}</p>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue"
+import { ref, onMounted, inject } from "vue"
 import { db } from "@/firebase"
 import {getDoc, doc} from "firebase/firestore";
 
 const props = defineProps({
   messageID: {
-    type: String,
-    required: true
-  },
-  userID: {
     type: String,
     required: true
   },
@@ -31,6 +27,9 @@ const props = defineProps({
   },
 });
 
+const user = ref({});
+const curUser = inject('userDoc');
+
 function allRead(){
   console.log(message.value)
   for (let id in message.value.readby){
@@ -39,10 +38,13 @@ function allRead(){
   return true;
 }
 const message = ref({});
-onMounted(() => {
+onMounted(async () => {
   const messageDoc = doc(db, "groups", props.groupID, "messages", props.messageID);
-  getDoc(messageDoc).then((doc) => {
+  await getDoc(messageDoc).then((doc) => {
     message.value = doc.data();
   });
+  const q = await getDoc(doc(db, "users", message.value.authorID));
+  user.value = q.data();
+  console.log("uservalue "+user.value);
 })
 </script>
