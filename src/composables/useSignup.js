@@ -35,7 +35,7 @@ const useSignup = () => {
 
       // Update Firebase Auth profile
       await updateProfile(user, {
-        displayName: username.value,
+        displayName: firstname.value + ' ' + lastname.value,
       });
 
       // Add user to Firestore
@@ -53,14 +53,14 @@ const useSignup = () => {
       });
 
       console.log('Registered and user data saved to Firestore.');
-      router.push('/');
+      await router.push('/');
     } catch (err) {
       console.error('Registration error:', err);
       error.value = err.message;
     }
   };
 
-  return { email, password, username, bio, birthday, error, pdp, register };
+  return { email, password, firstname, lastname, bio, birthday, error, pdp, register };
 };
 
 export default useSignup;
