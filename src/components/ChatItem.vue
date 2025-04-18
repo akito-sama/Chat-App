@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="d-flex align-items-center gap-2">
     <img :src="groupPDP" alt="" width="52px" height="52px" />
     <p>{{ groupName }}</p>
   </div>
