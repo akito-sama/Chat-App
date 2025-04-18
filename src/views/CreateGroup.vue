@@ -28,12 +28,13 @@
 
 <script setup>
 import { db } from "@/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { addDoc, collection, getDocs } from "firebase/firestore";
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import UserItem from "../components/UserItem.vue";
 import getUser from "../composables/getUser"
 
-
+const groupsRef = collection(db, "groups");
 const authuser = getUser().user;
 const users = ref([]);
 const name = ref('');
@@ -51,9 +52,19 @@ const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value;
 };
 
-const handleSubmit = () => {
-  console.log("Submitted", { name: name.value, text: text.value });
-  // Add your form submission logic here
+const router = useRouter();
+
+const handleSubmit = async () => {
+    let request = await addDoc(groupsRef, {
+        groupName: name.value,
+        groupBio: text.value,
+        groupMembers: selected.value,
+        groupPDP: '',
+        groupAdmins: [authuser.value.uid],
+        isPrivate: false,
+        lastMessage: "",
+    });
+    router.push("/");
 };
 
 onMounted(async () => {
