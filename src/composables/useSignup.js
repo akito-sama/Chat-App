@@ -12,10 +12,19 @@ const useSignup = () => {
   const birthday = ref(Date(0));
   const error = ref(null);
   const router = useRouter();
+    const emailRegex = /^[A-Za-z]+\.[A-Za-z]+@um6p\.ma$/;
 
   const register = async () => {
     error.value = null;
     try {
+      if (!emailRegex.test(email.value)) {
+        alert("Please enter a valid email address from UM6P.");
+        return;
+      }
+      if (!username.value.trim()) {
+        alert("Full name cannot be empty");
+        return;
+      }
       const auth = getAuth();
       const db = getFirestore();
 
@@ -33,7 +42,8 @@ const useSignup = () => {
         username: username.value,
         email: email.value,
         bio: bio.value,
-        blocked: false,
+        isOnline: true,
+        groups: [],
         pdp: pdp.value ? pdp.value : 'https://i.postimg.cc/05zJ6r52/duck-default.png', 
         birthday: birthday.value,
         createdAt: new Date(),
