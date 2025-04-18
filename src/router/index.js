@@ -6,12 +6,19 @@ import Private from "../views/Private.vue"
 import User from "../views/User.vue"
 import Notification from "../views/Notifs.vue"
 import CreateGroup from "../views/CreateGroup.vue"
+import AddPrivateDiscussion from "../views/AddPrivateDiscussion.vue"
+
 
 const routes = [
   {
     path: '/',
     name: 'home',
     component: Home
+  },
+  {
+    path: '/add-private-discussion',
+    name: 'addPrivateDiscussion',
+    component: AddPrivateDiscussion,
   },
   {
     path: '/create-group',
@@ -21,9 +28,6 @@ const routes = [
   {
     path: '/login',
     name: 'login',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
     component: Login
   },
   {

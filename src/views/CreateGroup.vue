@@ -65,26 +65,39 @@
 
 <script setup>
 import { db } from "@/firebase";
-import { addDoc, arrayUnion, collection, doc, getDocs, updateDoc } from "firebase/firestore";
+import {
+  addDoc,
+  arrayUnion,
+  collection,
+  doc,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import UserItem from "../components/UserItem.vue";
-import getUser from "../composables/getUser"
+import getUser from "../composables/getUser";
 
 const groupsRef = collection(db, "groups");
 const authuser = getUser().user;
 const users = ref([]);
-const name = ref('');
-const text = ref('');
-const search  = ref('');
+const name = ref("");
+const text = ref("");
+const search = ref("");
 const dropdownOpen = ref(false);
 const selected = ref([]);
 const filtered_users = computed(() => {
-    return users.value.filter((user) => {
-        // console.log(authuser.value.uid, user.id);
-        return user.firstname.toLowerCase().includes(search.value.toLowerCase()) && !(selected.value.includes(user.id)) && authuser.value.uid != user.id;
-    }).slice(0, 15);
-})
+  return users.value
+    .filter((user) => {
+      // console.log(authuser.value.uid, user.id);
+      return (
+        user.firstname.toLowerCase().includes(search.value.toLowerCase()) &&
+        !selected.value.includes(user.id) &&
+        authuser.value.uid != user.id
+      );
+    })
+    .slice(0, 15);
+});
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value;
 };
@@ -92,38 +105,42 @@ const toggleDropdown = () => {
 const router = useRouter();
 
 const handleSubmit = async () => {
-    try {
+  if (selected.value.length < 1) {
+    alert("You have to choose at least 1 member!");
+    return;
+  }
+  try {
     let request = await addDoc(groupsRef, {
-        groupName: name.value,
-        groupBio: text.value,
-        groupMembers: selected.value,
-        groupPDP: '',
-        groupAdmins: [authuser.value.uid],
-        isPrivate: false,
-        lastMessage: "",
-    });}
-    catch (err) {
-        console.log("can't add group", err);
-    }
-    try {
+      groupName: name.value,
+      groupBio: text.value,
+      groupMembers: selected.value,
+      groupPDP: "",
+      groupAdmins: [authuser.value.uid],
+      isPrivate: false,
+      lastMessage: "",
+    });
+  } catch (err) {
+    console.log("can't add group", err);
+  }
+  try {
     for (let i = 0; i < selected.value.length; i++) {
-        let userRef = doc(db, "users", selected.value[i]);
-        updateDoc(userRef, {
-            groups: arrayUnion(request.id),
-        });
+      let userRef = doc(db, "users", selected.value[i]);
+      updateDoc(userRef, {
+        groups: arrayUnion(request.id),
+      });
     }
     let userRef = doc(db, "users", authuser.value.uid);
     updateDoc(userRef, {
-        groups: arrayUnion(request.id),
+      groups: arrayUnion(request.id),
     });
-    } catch (err) {
-        console.log("can't modify users", err);
-    }
-    selected.value = [];
-    name.value = '';
-    text.value = '';
-    dropdownOpen.value = false;
-    router.push("/");
+  } catch (err) {
+    console.log("can't modify users", err);
+  }
+  selected.value = [];
+  name.value = "";
+  text.value = "";
+  dropdownOpen.value = false;
+  router.push("/");
 };
 
 onMounted(async () => {
