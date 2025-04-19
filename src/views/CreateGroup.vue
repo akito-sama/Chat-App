@@ -107,9 +107,7 @@ const dropdownOpen = ref(false);
 const selected = ref([]);
 const filtered_users = computed(() => {
   return users.value
-    .filter((user) => {
-      // console.log(authuser.value.uid, user.id);
-      return (
+    .filter((user) => { return (
         user.firstname.toLowerCase().includes(search.value.toLowerCase()) &&
         !selected.value.includes(user.id) &&
         authuser.value.uid != user.id
