@@ -74,8 +74,7 @@ let filtered_groups = computed(() => {
     if (!group.isPrivate) {
       return group.groupName.toLowerCase().includes(search.value.toLowerCase());
     } else {
-      let useruid = getUser().user?.value?.uid;
-      if (!useruid) return false;
+      let useruid = getUser().user.value.uid;
       let members = group.groupMembers;
       let other_uid = members[0] === useruid ? members[1] : members[0];
       let docSnap = await getDoc(doc(db, "users", other_uid));
@@ -87,8 +86,20 @@ let filtered_groups = computed(() => {
 let groupsRef = collection(db, "groups");
 onMounted(async () => {
   let querySnapshot = await getDocs(groupsRef);
-  querySnapshot.forEach((doc) => {
-    groups.value.push({ id: doc.id, ...doc.data() });
+  querySnapshot.forEach(async (document) => {
+    if (document.data().groupMembers.includes(getUser().user.value.uid) || (!document.data().isPrivate && document.data().groupAdmins.includes(getUser().user.value.uid))) {
+        if (!document.data().isPrivate)
+            groups.value.push({ id: document.id, ...document.data() });
+        else {
+            let useruid = getUser().user.value.uid;
+            let members = document.data().groupMembers;
+            let other_uid = members[0] === useruid ? members[1] : members[0];
+            let docSnap = await getDoc(doc(db, "users", other_uid));
+            if (docSnap.exists()) {
+                groups.value.push({ id: document.id, ...document.data(), groupName: docSnap.data().firstname});
+            }
+        }
+    }
   });
 });
 
@@ -96,3 +107,4 @@ function selectChat(id) {
   emit("chat-selected", id);
 }
 </script>
+  
