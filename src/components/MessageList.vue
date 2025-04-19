@@ -19,33 +19,20 @@
         </li>
       </ul>
     </div>
-
-    <!-- Input bar -->
-    <div class="writeSection border-top p-2 bg-white">
-      <input
-        type="text"
-        v-model="newMessage"
-        placeholder="Type a message..."
-        @keyup.enter="sendMessage"
-        class="form-control"
-      />
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, nextTick } from "vue";
 import { db } from "@/firebase";
 import {
   collection,
-  getDoc,
-  doc,
-  addDoc,
   query,
   orderBy,
   onSnapshot,
 } from "firebase/firestore";
 import MessageItem from "@/components/MessageItem.vue";
+import MessageBar from "@/components/MessageBar.vue";
 
 const props = defineProps({
   userID: {
@@ -58,16 +45,17 @@ const props = defineProps({
   },
 });
 
-const newMessage = ref("");
 const messages = ref([]);
 
 onSnapshot(
   query(collection(db, "groups", props.groupID, "messages"), orderBy("date")),
-  (querySnapshot) => {
+  async (querySnapshot) => {
     messages.value = [];
     querySnapshot.forEach((doc) => {
       messages.value.push({ id: doc.id, ...doc.data() });
     });
+    await nextTick(); // Add this line
+    window.scrollTo(0, document.body.scrollHeight);
   }
 );
 
@@ -75,45 +63,6 @@ messages.value.sort((a, b) => {
   return b.date - a.date;
 });
 
-async function getAllMembers() {
-  const members = {};
-  try {
-    const groupDoc = await getDoc(doc(db, "groups", props.groupID));
-    if (groupDoc.exists()) {
-      const groupData = groupDoc.data();
-      const groupMembers = groupData.groupMembers || [];
-      groupMembers.forEach((member) => {
-        if (member !== props.userID) {
-          members[member] = false;
-        }
-      });
-      const groupAdmins = groupData.groupAdmins || [];
-      groupAdmins.forEach((admin) => {
-        if (admin !== props.userID) {
-          members[admin] = false;
-        }
-      });
-    } else {
-      console.error("Group document not found");
-    }
-  } catch (error) {
-    console.error("Error fetching group members:", error);
-  }
-  return members;
-}
-
-async function sendMessage() {
-  if (newMessage.value.trim() === "") return;
-
-  const message = {
-    text: newMessage.value,
-    authorID: props.userID,
-    readby: await getAllMembers(),
-    date: new Date(),
-  };
-  await addDoc(collection(db, "groups", props.groupID, "messages"), message);
-  newMessage.value = "";
-}
 </script>
 
 <style scoped>

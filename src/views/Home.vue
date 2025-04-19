@@ -8,17 +8,19 @@
       </div>
 
       <!-- Main chat area -->
-      <div class="col-8 col-md-9 p-3 overflow-auto">
-        <MessageList
-          v-if="selectedChat"
-          :key="selectedChat"
-          :groupID="selectedChat"
-          :userID="user?.uid"
-        />
-        <div v-else class="text-muted text-center mt-5">
+      <div class="col-8 col-md-9 p-0 d-flex flex-column" style="height: 100vh;">
+        <div v-if="selectedChat" class="flex-grow-1 overflow-auto">
+          <MessageList
+            :key="selectedChat"
+            :groupID="selectedChat"
+            :userID="user?.uid"
+          />
+        </div>
+        <div v-else class="text-muted text-center mt-5 flex-grow-1">
           Select a chat to start messaging.
         </div>
-      </div>
+        <MessageBar v-if="selectedChat" :group-i-d="selectedChat" class="border-top"/>
+</div>
     </div>
   </div>
 </template>
@@ -27,6 +29,7 @@
 import NavSection from "@/components/NavSection.vue";
 import MessageList from "@/components/MessageList.vue";
 import { ref, inject } from "vue";
+import MessageBar from "@/components/MessageBar.vue";
 
 let selectedChat = ref('');
 let user = inject("userDoc");
