@@ -29,7 +29,6 @@
           @click="
             () => {
               selected = user.id;
-              console.log('Youre my special');
               dropdownOpen = false;
               search = '';
             }
