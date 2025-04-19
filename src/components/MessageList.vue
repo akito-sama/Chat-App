@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from "vue";
+import { ref, nextTick, onMounted } from "vue";
 import { db } from "@/firebase";
 import {
   collection,
@@ -32,7 +32,6 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import MessageItem from "@/components/MessageItem.vue";
-import MessageBar from "@/components/MessageBar.vue";
 
 const props = defineProps({
   userID: {
@@ -59,10 +58,11 @@ onSnapshot(
   }
 );
 
-messages.value.sort((a, b) => {
-  return b.date - a.date;
-});
-
+onMounted(() => {
+  messages.value.sort((a, b) => {
+    return b.date - a.date;
+  });
+})
 </script>
 
 <style scoped>
