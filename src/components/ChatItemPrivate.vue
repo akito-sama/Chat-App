@@ -19,17 +19,19 @@ import { onMounted, ref } from "vue";
 
 const props = defineProps({ GroupId: String });
 
-let useruid = getUser().user.value.uid;
+let user = getUser().user.value;
+let useruid = user ? user.uid : null;
 let Name = ref("");
 let PDP = ref("");
 
 const groupRef = doc(db, "groups", props.GroupId);
 
 onMounted(async () => {
+  if (!useruid) return; // Prevent error if not logged in
   let docSnap = await getDoc(groupRef);
   if (docSnap.exists()) {
     let members = docSnap.data().groupMembers;
-    let other_uid = members[0] === useruid ? members[1] : members[0];;
+    let other_uid = members[0] === useruid ? members[1] : members[0];
     let docSnapOther = await getDoc(doc(db, "users", other_uid));
     if (docSnapOther.exists()) {
       Name.value = docSnapOther.data().firstname;

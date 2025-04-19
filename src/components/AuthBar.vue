@@ -32,6 +32,11 @@
       </ul>
     </div>
 
+    <!-- Notifications Icon -->
+    <router-link v-if="logged_in" to="/notifs" class="btn btn-outline-secondary mb-3 d-flex align-items-center gap-2" style="width: 48px; align-self: flex-end;">
+      <i class="bi bi-bell fs-4"></i>
+    </router-link>
+
      <!-- Spacer -->
      <div class="flex-grow-1"></div>
 

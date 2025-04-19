@@ -74,7 +74,8 @@ let filtered_groups = computed(() => {
     if (!group.isPrivate) {
       return group.groupName.toLowerCase().includes(search.value.toLowerCase());
     } else {
-      let useruid = getUser().user.value.uid;
+      let useruid = getUser().user?.value?.uid;
+      if (!useruid) return false;
       let members = group.groupMembers;
       let other_uid = members[0] === useruid ? members[1] : members[0];
       let docSnap = await getDoc(doc(db, "users", other_uid));

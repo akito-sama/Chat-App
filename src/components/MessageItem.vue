@@ -20,6 +20,7 @@
 import { ref, onMounted } from "vue";
 import { db } from "@/firebase";
 import { getDoc, doc } from "firebase/firestore";
+import { useRouter } from "vue-router";
 
 const props = defineProps({
   messageID: {
@@ -44,10 +45,37 @@ function allRead() {
 }
 
 const message = ref({});
+const router = useRouter();
+
 onMounted(() => {
-  const messageDoc = doc(db, "groups", props.groupID, "messages", props.messageID);
+  const messageDoc = doc(
+    db,
+    "groups",
+    props.groupID,
+    "messages",
+    props.messageID
+  );
   getDoc(messageDoc).then((docSnap) => {
     message.value = docSnap.data();
+    // If the message is for the current user and not sent by them, show notification in Notifs.vue
+    if (message.value && message.value.authorID !== props.userID) {
+      // Save notification to localStorage only if not already present (by messageID)
+      let notifs = JSON.parse(localStorage.getItem("notifs") || "[]");
+      const alreadyExists = notifs.some(
+        (notif) => notif.messageID === props.messageID
+      );
+      if (!alreadyExists) {
+        notifs.push({
+          messageID: props.messageID,
+          text: message.value.text,
+          authorName: message.value.authorName,
+          groupID: props.groupID,
+          date: message.value.date,
+          read: false,
+        });
+        localStorage.setItem("notifs", JSON.stringify(notifs));
+      }
+    }
   });
 });
 </script>
