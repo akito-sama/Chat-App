@@ -27,9 +27,54 @@
           <i class="bi bi-funnel"></i>
         </button>
         <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="#">Unread</a></li>
-          <li><a class="dropdown-item" href="#">Groups</a></li>
-          <li><a class="dropdown-item" href="#">Online Users</a></li>
+          <li>
+            <a
+              class="dropdown-item"
+              href="#"
+              @click="
+                () => {
+                  buttonFilter = 'Unread';
+                }
+              "
+              >Unread</a
+            >
+          </li>
+          <li>
+            <a
+              class="dropdown-item"
+              href="#"
+              @click="
+                () => {
+                  buttonFilter = 'Groups';
+                }
+              "
+              >Groups</a
+            >
+          </li>
+          <li>
+            <a
+              class="dropdown-item"
+              href="#"
+              @click="
+                () => {
+                  buttonFilter = 'Online';
+                }
+              "
+              >Online Users</a
+            >
+          </li>
+          <li>
+            <a
+              class="dropdown-item"
+              href="#"
+              @click="
+                () => {
+                  buttonFilter = '';
+                }
+              "
+              >Everyone</a
+            >
+          </li>
         </ul>
       </div>
     </div>
@@ -59,7 +104,13 @@
 </template>
 
 <script setup>
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+} from "firebase/firestore";
 import ChatItem from "./ChatItem.vue";
 import ChatItemPrivate from "./ChatItemPrivate.vue";
 import { db } from "@/firebase";
@@ -67,29 +118,94 @@ import SelectUser from "./SelectUser.vue";
 import { computed, onMounted, ref } from "vue";
 import getUser from "@/composables/getUser";
 
+let buttonFilter = ref("");
 let search = ref("");
 let groups = ref([]);
 let emit = defineEmits(["chat-selected"]);
 let filtered_groups = computed(() => {
   return groups.value.filter((group) => {
-    return group.groupName.toLowerCase().includes(search.value.toLowerCase());
+    let name_condition = group.groupName
+      .toLowerCase()
+      .includes(search.value.toLowerCase());
+    if (buttonFilter.value == "Groups") {
+      return !group.isPrivate && name_condition;
+    }
+    if (buttonFilter.value == "Online") {
+      return name_condition && group.isPrivate && userMap[group.uid].isOnline;
+    }
+    if (buttonFilter.value == "Unread") {
+      return name_condition && !(group.lastMessage.readby[getUser().user.value.uid] || group.lastMessage.authorID === getUser().user.value.uid);
+    }
+    return name_condition;
+  }).sort((a, b) => {
+      const aDate = a.lastMessage?.date?.toDate?.() ?? new Date();
+      const bDate = b.lastMessage?.date?.toDate?.() ?? new Date();
+      return bDate - aDate;
+    });
+});
+
+const usersRef = collection(db, "users");
+const groupRef = collection(db, "groups");
+
+onSnapshot(usersRef, (snapshot) => {
+  snapshot.docChanges().forEach((change) => {
+    const user = change.doc.data();
+    const userId = change.doc.id;
+    userMap.value[userId] = user;
   });
 });
+
+onSnapshot(groupRef, (snapshot) => {
+  snapshot.docChanges().forEach((change) => {
+    if (change.type === "modified") {
+        let index = groups.value.find((group) => group.id === change.doc.id);
+        console.log("data: ", index);
+        if (!index) {
+            return
+        } else {
+            Object.assign(index, change.doc.data());
+        }
+    }
+    if (change.type === "added") {
+      let data = change.doc.data();
+      if (
+        data.groupMembers.includes(getUser().user.value.uid) &&
+        !groups.value.find((group) => group.id === change.doc.id)
+      ) {
+        if (!data.isPrivate) {
+          groups.value.push({ id: change.doc.id, ...data });
+        } else {
+          let useruid = getUser().user.value.uid;
+          let members = change.doc.data().groupMembers;
+          let other_uid = members[0] === useruid ? members[1] : members[0];
+          if (other_uid in userMap) {
+            groups.value.push({
+              id: change.doc.id,
+              ...change.doc.data(),
+              uid: other_uid,
+              groupName: userMap[other_uid].firstname,
+            });
+          }
+        }
+      }
+    }
+  });
+});
+
+const userMap = ref({});
 
 let groupsRef = collection(db, "groups");
 onMounted(async () => {
   let querySnapshot = await getDocs(groupsRef);
-  const userMap = {}; // or: const userMap = ref({}) if you want it reactive
-
   const userDocs = await getDocs(collection(db, "users"));
   userDocs.forEach((doc) => {
     userMap[doc.id] = doc.data();
   });
   querySnapshot.forEach(async (document) => {
     if (
-      document.data().groupMembers.includes(getUser().user.value.uid) ||
+      (document.data().groupMembers.includes(getUser().user.value.uid) ||
       (!document.data().isPrivate &&
-        document.data().groupAdmins.includes(getUser().user.value.uid))
+        document.data().groupAdmins.includes(getUser().user.value.uid))) && !groups.value.find((group) => group.id === document.id)
     ) {
       if (!document.data().isPrivate)
         groups.value.push({ id: document.id, ...document.data() });
@@ -101,6 +217,7 @@ onMounted(async () => {
           groups.value.push({
             id: document.id,
             ...document.data(),
+            uid: other_uid,
             groupName: userMap[other_uid].firstname,
           });
         }
