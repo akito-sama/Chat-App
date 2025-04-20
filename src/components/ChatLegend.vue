@@ -24,7 +24,7 @@
       <button class="btn btn-outline-success btn-sm" @click="() => { state = 'addMember'; }">
         <i class="bi bi-person-plus"></i>
       </button>
-      <button class="btn btn-outline-danger btn-sm" @click="() => { state = 'removeMember'; }">
+      <button v-if="group.groupAdmins && group.groupAdmins.includes(authUser.uid)" class="btn btn-outline-danger btn-sm" @click="() => { state = 'removeMember'; }">
         <i class="bi bi-person-dash"></i>
       </button>
     </div>
@@ -38,7 +38,7 @@ import { ref, onMounted } from "vue"
 import { db } from "@/firebase"
 import { arrayRemove, arrayUnion, collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore"
 import SelectUser from "@/components/SelectUser.vue"
-
+import getUser from "@/composables/getUser"
 let key = ref(0);
 const props = defineProps({
   groupID: {
@@ -46,7 +46,7 @@ const props = defineProps({
     required: true
   },
 });
-
+let authUser = getUser().user;
 let addMember = async (uid) => {
   key.value++;
   state.value = "";
@@ -81,10 +81,9 @@ let state = ref("");
 let users = ref([]);
 const group = ref({});
 const groupDoc = doc(db, "groups", props.groupID);
-onMounted(() => {
-  getDoc(groupDoc).then((doc) => {
-    group.value = doc.data();
-  });
+onMounted(async () => {
+  group.value = await (await getDoc(groupDoc)).data();
+  console.log(group);
   getDocs(collection(db, "users")).then((querySnapshot) => {
     querySnapshot.forEach((doc) => {
       if (!group.value.groupMembers.includes(doc.id) && (!group.value.groupAdmins.includes(doc.id)))

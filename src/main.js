@@ -1,7 +1,8 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-import { getFCMToken } from './firebase';
+import {getFCMToken } from './firebase';
 import router from './router';
+
 
 createApp(App).use(router).mount('#app');
 
