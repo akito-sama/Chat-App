@@ -83,9 +83,6 @@ onMounted(async () => {
   if (groupDoc.exists()) {
     isPrivate.value = groupDoc.data().isPrivate;
   }
-  messages.value.sort((a, b) => {
-    return b.date - a.date;
-  });
 });
 </script>
 
