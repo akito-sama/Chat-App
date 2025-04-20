@@ -134,7 +134,7 @@ let filtered_groups = computed(() => {
       return name_condition && group.isPrivate && userMap[group.uid].isOnline;
     }
     if (buttonFilter.value == "Unread") {
-      return name_condition;
+      return name_condition && !(group.lastMessage.readby[getUser().user.value.uid] || group.lastMessage.authorID === getUser().user.value.uid);
     }
     return name_condition;
   });
@@ -153,9 +153,21 @@ onSnapshot(usersRef, (snapshot) => {
 
 onSnapshot(groupRef, (snapshot) => {
   snapshot.docChanges().forEach((change) => {
+    if (change.type === "modified") {
+        let index = groups.value.find((group) => group.id === change.doc.id);
+        console.log("data: ", index);
+        if (!index) {
+            return
+        } else {
+            Object.assign(index, change.doc.data());
+        }
+    }
     if (change.type === "added") {
       let data = change.doc.data();
-      if (data.groupMembers.includes(getUser().user.value.uid)) {
+      if (
+        data.groupMembers.includes(getUser().user.value.uid) &&
+        !groups.value.find((group) => group.id === change.doc.id)
+      ) {
         if (!data.isPrivate) {
           groups.value.push({ id: change.doc.id, ...data });
         } else {
@@ -187,9 +199,9 @@ onMounted(async () => {
   });
   querySnapshot.forEach(async (document) => {
     if (
-      document.data().groupMembers.includes(getUser().user.value.uid) ||
+      (document.data().groupMembers.includes(getUser().user.value.uid) ||
       (!document.data().isPrivate &&
-        document.data().groupAdmins.includes(getUser().user.value.uid))
+        document.data().groupAdmins.includes(getUser().user.value.uid))) && !groups.value.find((group) => group.id === document.id)
     ) {
       if (!document.data().isPrivate)
         groups.value.push({ id: document.id, ...document.data() });
