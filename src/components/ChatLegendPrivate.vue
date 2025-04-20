@@ -11,23 +11,38 @@
   </div>
 </template>
 
-
 <script setup>
-import { ref, onMounted } from "vue"
-import { db } from "@/firebase"
-import { doc, getDoc } from "firebase/firestore"
+import { ref, onMounted } from "vue";
+import { db } from "@/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import getUser from "@/composables/getUser";
 
 const props = defineProps({
   groupID: {
     type: String,
-    required: true
+    required: true,
   },
 });
-const group = ref({});
+const group = ref({ groupPDP: "", groupName: "" });
 const groupDoc = doc(db, "groups", props.groupID);
-onMounted(() => {
-  getDoc(groupDoc).then((doc) => {
-    group.value = doc.data();
-  });
+const authUser = getUser().user;
+
+onMounted(async () => {
+  const docSnap = await getDoc(groupDoc);
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    // Find the other member
+    const members = data.groupMembers || [];
+    const myUid = authUser.value?.uid;
+    const otherUid = members.find((uid) => uid !== myUid);
+    if (otherUid) {
+      const otherDoc = await getDoc(doc(db, "users", otherUid));
+      if (otherDoc.exists()) {
+        const other = otherDoc.data();
+        group.value.groupPDP = other.pdp;
+        group.value.groupName = other.firstname;
+      }
+    }
+  }
 });
 </script>

@@ -29,7 +29,30 @@
       <!-- Group Image Upload -->
       <div class="mb-3">
         <label class="form-label">Group Image</label>
-        <input type="file" class="form-control" />
+        <div
+          class="border p-3 d-flex justify-content-center align-items-center"
+          @dragover.prevent
+          @drop="handleFileDrop"
+          @click="triggerFileInput"
+          style="cursor: pointer; min-height: 150px"
+        >
+          <input
+            type="file"
+            ref="fileInput"
+            class="d-none"
+            @change="handleFileSelect"
+          />
+          <span v-if="!groupPDP.value"
+            >Drag & Drop or Click to Upload Image</span
+          >
+          <img
+            v-if="groupPDP.value"
+            :src="groupPDP.value"
+            alt="Group Image"
+            class="img-fluid"
+            style="max-width: 100%; max-height: 150px; object-fit: cover"
+          />
+        </div>
       </div>
 
       <!-- Buttons Row -->
@@ -92,10 +115,21 @@ import {
   getDocs,
   updateDoc,
 } from "firebase/firestore";
-import { computed, onMounted, ref } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import UserItem from "../components/UserItem.vue";
 import getUser from "../composables/getUser";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
+
+const storage = getStorage(); // Initialize Firebase Storage
+
+// Define the `fileInput` reference here
+const fileInput = ref(null); // This reference will point to the file input element
 
 const groupsRef = collection(db, "groups");
 const authuser = getUser().user;
@@ -105,9 +139,12 @@ const text = ref("");
 const search = ref("");
 const dropdownOpen = ref(false);
 const selected = ref([]);
+const groupPDP = ref(""); // Store image URL
+
 const filtered_users = computed(() => {
   return users.value
-    .filter((user) => { return (
+    .filter((user) => {
+      return (
         user.firstname.toLowerCase().includes(search.value.toLowerCase()) &&
         !selected.value.includes(user.id) &&
         authuser.value.uid != user.id
@@ -115,11 +152,54 @@ const filtered_users = computed(() => {
     })
     .slice(0, 15);
 });
+
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value;
 };
 
 const router = useRouter();
+
+// New helper function to trigger file input click
+const triggerFileInput = () => {
+  if (fileInput.value) {
+    fileInput.value.click(); // Use fileInput reference to trigger the click event
+  }
+};
+
+const handleFileSelect = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    uploadImage(file);
+  }
+};
+
+const handleFileDrop = (event) => {
+  const file = event.dataTransfer.files[0];
+  if (file) {
+    uploadImage(file);
+  }
+};
+
+const uploadImage = (file) => {
+  const storagePath = `groupImages/${Date.now()}_${file.name}`;
+  const fileRef = storageRef(storage, storagePath); // Use the storage instance
+  const uploadTask = uploadBytesResumable(fileRef, file);
+
+  uploadTask.on(
+    "state_changed",
+    (snapshot) => {
+      // Track progress if needed
+    },
+    (error) => {
+      console.log("Error uploading file:", error);
+    },
+    () => {
+      getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+        groupPDP.value = downloadURL; // Store the download URL
+      });
+    }
+  );
+};
 
 const handleSubmit = async () => {
   try {
@@ -127,7 +207,7 @@ const handleSubmit = async () => {
       groupName: name.value,
       groupBio: text.value,
       groupMembers: selected.value,
-      groupPDP: "",
+      groupPDP: groupPDP.value, // Save the image URL
       groupAdmins: [authuser.value.uid],
       isPrivate: false,
       lastMessage: "",
@@ -167,11 +247,3 @@ onMounted(async () => {
   });
 });
 </script>
-
-<style scoped>
-/* Optional styling override for dropdown if needed */
-.dropdown-menu {
-  max-height: 300px;
-  overflow-y: auto;
-}
-</style>
