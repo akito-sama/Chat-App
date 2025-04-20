@@ -177,25 +177,50 @@ onMounted(() => {
 .message {
   max-width: 70%;
   padding: 0.75rem 1rem;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 0.9rem;
   line-height: 1.4;
   position: relative;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
 
 .message-sent {
   align-self: flex-end;
-  background-color: #dcf8c6;
-  color: #000;
+  background-color: #e3f1d4; /* Light leafy green */
+  color: #2c5e30;
   border-top-right-radius: 0;
+  border: 1px solid rgba(140, 179, 105, 0.2);
+  position: relative;
+}
+
+.message-sent::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(135deg, #e3f1d4 50%, transparent 50%);
+  border-top: 1px solid rgba(140, 179, 105, 0.2);
+  border-right: 1px solid rgba(140, 179, 105, 0.2);
 }
 
 .message-received {
   align-self: flex-start;
   background-color: #fff;
-  color: #000;
+  color: #3a603d;
   border-top-left-radius: 0;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(76, 124, 80, 0.15);
+  position: relative;
+}
+
+.message-received::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(-45deg, #fff 50%, transparent 50%);
+  border-top: 1px solid rgba(76, 124, 80, 0.15);
+  border-left: 1px solid rgba(76, 124, 80, 0.15);
 }
 
 .message-header {
@@ -206,16 +231,18 @@ onMounted(() => {
 }
 
 .author-avatar {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid rgba(140, 179, 105, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .author-name {
   font-size: 0.85rem;
-  font-weight: bold;
-  color: #555;
+  font-weight: 600;
+  color: #4d7c50;
 }
 
 .message-body {
@@ -227,23 +254,26 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 0.5rem;
   font-size: 0.75rem;
-  color: #555;
+  margin-top: 0.4rem;
 }
 
 .message-time {
   font-size: 0.75rem;
+  color: rgba(76, 124, 80, 0.7);
 }
 
 .message-status {
   font-size: 0.75rem;
-  color: #34b7f1;
+  color: #4d7c50;
 }
 
 .edited {
   font-size: 0.75rem;
-  color: #f39c12;
+  color: #8cb369;
   display: flex;
   justify-content: flex-end;
+  font-style: italic;
+  margin-top: 0.2rem;
 }
 
 .message-options {
@@ -251,15 +281,89 @@ onMounted(() => {
   top: 0.25rem;
   right: 0.25rem;
   z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.message:hover .message-options {
+  opacity: 1;
 }
 
 .message-options .btn {
   font-size: 1rem;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
+  color: #4d7c50;
+  transition: transform 0.2s ease;
 }
 
 .message-options .btn:hover {
-  opacity: 1;
+  transform: scale(1.1);
+}
+
+.dropdown-menu {
+  background: #f9fcf6;
+  border: 1px solid rgba(76, 124, 80, 0.15);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.dropdown-item {
+  color: #3c5a3f;
+  transition: all 0.2s ease;
+  padding: 0.6rem 1rem;
+}
+
+.dropdown-item:hover {
+  background: rgba(140, 179, 105, 0.1);
+  color: #2c5e43;
+  padding-left: 1.2rem;
+}
+
+.dropdown-item.text-danger {
+  color: #e74c3c;
+}
+
+.dropdown-item.text-danger:hover {
+  background: rgba(231, 76, 60, 0.1);
+}
+
+/* Edit mode styling */
+textarea.form-control {
+  border: 1px solid rgba(76, 124, 80, 0.3);
+  border-radius: 8px;
+  background-color: #f9fcf6;
+  color: #3a603d;
+  transition: all 0.3s ease;
+}
+
+textarea.form-control:focus {
+  border-color: rgba(76, 124, 80, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(76, 124, 80, 0.15);
+}
+
+.btn-primary {
+  background-color: #4d7c50;
+  border-color: #4d7c50;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #3a603d;
+  border-color: #3a603d;
+  transform: translateY(-1px);
+}
+
+.btn-outline-secondary {
+  color: #4d7c50;
+  border-color: rgba(76, 124, 80, 0.3);
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+  background-color: rgba(140, 179, 105, 0.1);
+  color: #3a603d;
+  border-color: rgba(76, 124, 80, 0.5);
 }
 </style>

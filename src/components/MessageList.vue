@@ -3,7 +3,13 @@
     <!-- Chat Legend (sticky header) -->
     <div class="flex-shrink-0 sticky-top bg-white z-3 border-bottom">
       <component
-        :is="isPrivate === true ? ChatLegendPrivate : isPrivate === false ? ChatLegend : null"
+        :is="
+          isPrivate === true
+            ? ChatLegendPrivate
+            : isPrivate === false
+            ? ChatLegend
+            : null
+        "
         v-if="isPrivate !== null"
         :groupID="props.groupID"
       />
@@ -13,8 +19,7 @@
       <div v-if="messages.length === 0" class="text-center mt-3 text-muted">
         <p>No messages yet.</p>
       </div>
-      <!-- Use transition-group for smooth animations -->
-      <transition-group name="message" tag="ul">
+      <ul>
         <li
           v-for="message in messages"
           :key="message.id"
@@ -26,7 +31,7 @@
             :messageID="message.id"
           />
         </li>
-      </transition-group>
+      </ul>
     </div>
   </div>
 </template>
@@ -65,8 +70,8 @@ onSnapshot(
   query(collection(db, "groups", props.groupID, "messages"), orderBy("date")),
   async (querySnapshot) => {
     messages.value = [];
-    querySnapshot.forEach((docSnap) => {
-      messages.value.push({ id: docSnap.id, ...docSnap.data() });
+    querySnapshot.forEach((doc) => {
+      messages.value.push({ id: doc.id, ...doc.data() });
     });
     // Update last message in group
     await updateDoc(doc(db, "groups", props.groupID), {
@@ -89,23 +94,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Transition styles for message items */
-.message-enter-active,
-.message-leave-active {
-  transition: all 0.5s ease;
-}
-.message-enter-from,
-.message-leave-to {
-  opacity: 0;
-  transform: translateY(10px);
-}
-.message-enter-to,
-.message-leave-from {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Container styles */
 .writeSection {
   background-color: white;
 }
@@ -119,8 +107,7 @@ onMounted(async () => {
   flex-direction: column-reverse;
   justify-content: flex-start;
   overflow-y: auto;
-  height: 0;
-  min-height: 0;
+  width: 100%;
 }
 
 ul.list-unstyled {
@@ -129,7 +116,6 @@ ul.list-unstyled {
 }
 
 .max-w-100 {
-  max-width: 100vh;
   margin: 0 auto;
 }
 </style>
