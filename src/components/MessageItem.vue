@@ -93,10 +93,15 @@ const author = ref({});
 
 async function UpdateMessage() {
   const messageDoc = doc(db, "groups", props.groupID, "messages", props.messageID);
+  if (message.value.text.trim() === "") {
+    alert("Message cannot be empty");
+    return;
+  }
+  message.value.edited = true;
   await updateDoc(messageDoc, {
     ... message.value,
     text: message.value.text,
-    edited: true
+    edited: true,
   });
   editing.value = false;
 }
@@ -123,6 +128,13 @@ onMounted(async () => {
   await getDoc(authorDoc).then((docSnap) => {
     author.value = docSnap.data();
   });
+  if (message.value.authorID !== props.userID) {
+    message.value.readby[props.userID] = true;
+    await updateDoc(messageDoc, {
+      readby: message.value.readby,
+    });
+  }
+  console.log(message.value);
 });
 </script>
 

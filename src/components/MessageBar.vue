@@ -42,18 +42,21 @@ async function getAllMembers() {
     const groupDoc = await getDoc(doc(db, "groups", props.groupID));
     if (groupDoc.exists()) {
       const groupData = groupDoc.data();
+      console.log("Group data:", groupData);
       const groupMembers = groupData.groupMembers || [];
       groupMembers.forEach((member) => {
-        if (member !== user.uid) {
+        console.log("Member:", member, user.user.value.uid);
+        if (member !== user.user.value.uid) {
           members[member] = false;
         }
       });
       const groupAdmins = groupData.groupAdmins || [];
       groupAdmins.forEach((admin) => {
-        if (admin !== user.uid) {
+        if (admin !== user.user.value.uid) {
           members[admin] = false;
         }
       });
+      console.log("Members:", members);
     } else {
       console.error("Group document not found");
     }
