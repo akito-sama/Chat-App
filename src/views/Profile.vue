@@ -9,7 +9,7 @@
           v-if="user.id === connectedUser?.uid"
           class="btn btn-outline-primary mb-3"
           @click="changingProfile = !changingProfile">
-          <i class="bi bi-pencil-fill"></i> Change Profile
+          <i class="bi bi-pencil-fill"></i> {{ changingProfile ? 'Cancel' : 'Edit Profile' }}
         </button>
         <div v-if="changingProfile" class="mb-3">
         <label class="form-label text-brown">Profile Picture</label>
