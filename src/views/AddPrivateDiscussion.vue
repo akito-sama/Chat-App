@@ -1,44 +1,53 @@
 <template>
-  <form @submit.prevent="handleSubmit">
-    <button type="submit" class="btn btn-primary me-2">Send</button>
-    <div class="dropdown d-inline">
-      <button
-        class="btn btn-secondary dropdown-toggle"
-        type="button"
-        @click="toggleDropdown"
-        :aria-expanded="dropdownOpen"
-        :class="{ open: dropdownOpen }"
-      >
-        find contact
-      </button>
-      <div>
-        <label for="">Selected User</label>
-        <UserItem v-if="selected != ''" :UserId="selected" :key="selected"/>
-      </div>
-      <ul v-if="dropdownOpen" class="dropdown-menu show">
-        <input
-          type="text"
-          class="form-control mb-2"
-          v-model="search"
-          placeholder="Search"
-        />
-        <li
-          v-for="user in filtered_users"
-          :key="user.id"
-          class="dropdown-item"
-          @click="
-            () => {
-              selected = user.id;
-              dropdownOpen = false;
-              search = '';
-            }
-          "
+  <div class="d-flex justify-content-center align-items-center vh-100">
+    <form
+      @submit.prevent="handleSubmit"
+      class="d-flex flex-column gap-3 p-4 border rounded bg-light shadow"
+      style="min-width: 300px; max-width: 500px; width: 100%;"
+    >
+      <!-- Send Button -->
+      <button type="submit" class="btn btn-primary w-100">Send</button>
+
+      <!-- Dropdown -->
+      <div class="dropdown w-100">
+        <button
+          class="btn btn-secondary dropdown-toggle w-100"
+          type="button"
+          @click="toggleDropdown"
+          :aria-expanded="dropdownOpen"
+          :class="{ show: dropdownOpen }"
         >
-          <UserItem :UserId="user.id" />
-        </li>
-      </ul>
-    </div>
-  </form>
+          Find Contact
+        </button>
+
+        <!-- Selected User Display -->
+        <div class="mt-3">
+          <label class="form-label">Selected User</label>
+          <UserItem v-if="selected !== ''" :UserId="selected" :key="selected" />
+        </div>
+
+        <!-- Dropdown Menu -->
+        <div class="dropdown-menu show p-2 w-100 shadow mt-2" v-if="dropdownOpen">
+          <input
+            type="text"
+            class="form-control mb-2"
+            v-model="search"
+            placeholder="Search users..."
+          />
+          <ul class="list-unstyled mb-0">
+            <li
+              v-for="user in filtered_users"
+              :key="user.id"
+              class="dropdown-item cursor-pointer"
+              @click="() => { selected = user.id; dropdownOpen = false; search = ''; }"
+            >
+              <UserItem :UserId="user.id" />
+            </li>
+          </ul>
+        </div>
+      </div>
+    </form>
+  </div>
 </template>
 
 <script setup>
@@ -62,18 +71,21 @@ const users = ref([]);
 const search = ref("");
 const dropdownOpen = ref(false);
 const selected = ref("");
+
 const filtered_users = computed(() => {
   return users.value
     .filter((user) => {
-      // console.log(authuser.value.uid, user.id);
       return (
-        user.firstname && user.firstname.toLowerCase().includes(search.value.toLowerCase()) &&
+        user.firstname &&
+        typeof user.firstname === 'string' &&
+        user.firstname.toLowerCase().includes(search.value.toLowerCase()) &&
         selected.value !== user.id &&
         authuser.value.uid !== user.id
       );
     })
     .slice(0, 15);
 });
+
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value;
 };
@@ -87,46 +99,46 @@ const handleSubmit = async () => {
       isPrivate: true,
       lastMessage: "",
     });
-  } catch (err) {
-    console.log("can't add private group", err);
-  }
-  try {
-    let userRef = doc(db, "users", authuser.value.uid);
-    updateDoc(userRef, {
-      groups: arrayUnion(request.id),
-    });
+
+    let userRef1 = doc(db, "users", authuser.value.uid);
     let userRef2 = doc(db, "users", selected.value);
-    updateDoc(userRef2, {
-      groups: arrayUnion(request.id),
-    });
+
+    await Promise.all([
+      updateDoc(userRef1, {
+        groups: arrayUnion(request.id),
+      }),
+      updateDoc(userRef2, {
+        groups: arrayUnion(request.id),
+      }),
+    ]);
+
+    selected.value = "";
+    dropdownOpen.value = false;
+    router.push("/");
   } catch (err) {
-    console.log("can't modify users", err);
+    console.error("Error creating group or updating users:", err);
   }
-  selected.value = [];
-  dropdownOpen.value = false;
-  router.push("/");
 };
 
 onMounted(async () => {
   const usersRef = collection(db, "users");
   const querySnapshot = await getDocs(usersRef);
-  querySnapshot.forEach((doc) => {
+  querySnapshot.forEach((docSnap) => {
     users.value.push({
-      id: doc.id,
-      ...doc.data(),
+      id: docSnap.id,
+      ...docSnap.data(),
     });
   });
 });
 </script>
 
 <style scoped>
-/* Optional styling override for dropdown if needed */
 .dropdown-menu {
   max-height: 300px;
   overflow-y: auto;
 }
 
-.dropdown-toggle.open::after {
-  transform: rotate(180deg);
+.cursor-pointer {
+  cursor: pointer;
 }
 </style>

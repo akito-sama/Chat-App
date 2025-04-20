@@ -114,7 +114,6 @@ import {
 import ChatItem from "./ChatItem.vue";
 import ChatItemPrivate from "./ChatItemPrivate.vue";
 import { db } from "@/firebase";
-import SelectUser from "./SelectUser.vue";
 import { computed, onMounted, ref } from "vue";
 import getUser from "@/composables/getUser";
 
