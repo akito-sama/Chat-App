@@ -137,7 +137,11 @@ let filtered_groups = computed(() => {
       return name_condition && !(group.lastMessage.readby[getUser().user.value.uid] || group.lastMessage.authorID === getUser().user.value.uid);
     }
     return name_condition;
-  });
+  }).sort((a, b) => {
+      const aDate = a.lastMessage?.date?.toDate?.() ?? new Date();
+      const bDate = b.lastMessage?.date?.toDate?.() ?? new Date();
+      return bDate - aDate;
+    });
 });
 
 const usersRef = collection(db, "users");
