@@ -34,7 +34,7 @@
           <li><router-link class="dropdown-item" to="/login">Login</router-link></li>
         </template>
         <template v-else>
-          <li><router-link class="dropdown-item" to="/profile">View Profile</router-link></li>
+          <li><router-link class="dropdown-item" :to="'/profile/' + userInfo?.uid">View Profile</router-link></li>
           <li><hr class="dropdown-divider" /></li>
           <li>
             <button class="dropdown-item text-danger" @click="logout">

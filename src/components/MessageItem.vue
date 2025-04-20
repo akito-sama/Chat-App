@@ -50,6 +50,7 @@
           :src="author.pdp"
           alt="Profile Picture"
           class="author-avatar"
+          @click = "() => router.push('/profile/' + message.authorID)"
         />
         <span class="author-name">
           {{ author.firstname + ' ' + author.lastname }}
@@ -72,6 +73,7 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { db } from "@/firebase";
 import { getDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { useRouter } from "vue-router";
 
 const props = defineProps({
   messageID: {
@@ -90,6 +92,7 @@ const props = defineProps({
 
 let editing = ref(false);
 const author = ref({});
+const router = useRouter();
 
 async function UpdateMessage() {
   const messageDoc = doc(db, "groups", props.groupID, "messages", props.messageID);
