@@ -45,7 +45,7 @@
       </ul>
     </div>
 
-    <!-- Notifications -->
+    <!-- Notifications
     <router-link
       v-if="logged_in"
       to="/notifs"
@@ -54,7 +54,7 @@
       title="Notifications"
     >
       <i class="bi bi-bell fs-5"></i>
-    </router-link>
+    </router-link> -->
 
     <!-- Spacer -->
     <div class="flex-grow-1"></div>
