@@ -47,7 +47,7 @@ const router = useRouter();
 
 const redirectToUserProfile = () => {
   if (otherUserId.value) {
-    router.push(`/user/${otherUserId.value}`);
+    router.push(`/profile/${otherUserId.value}`);
   }
 };
 
