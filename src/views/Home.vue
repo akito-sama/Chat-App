@@ -21,7 +21,7 @@
           <p class="nature-empty-text">Select a chat to start messaging.</p>
         </div>
 
-        <MessageBar v-if="selectedChat" :group-id="selectedChat" />
+        <MessageBar v-if="selectedChat" :groupID="selectedChat" />
       </div>
     </div>
   </div>
@@ -49,6 +49,7 @@ let logged_in = inject("logged_in");
 
 function onChatSelected(chatId) {
   selectedChat.value = chatId;
+  console.log("Selected chat ID:", chatId);
 }
 </script>
 
