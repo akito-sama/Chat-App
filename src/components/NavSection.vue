@@ -27,9 +27,54 @@
           <i class="bi bi-funnel"></i>
         </button>
         <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="#">Unread</a></li>
-          <li><a class="dropdown-item" href="#">Groups</a></li>
-          <li><a class="dropdown-item" href="#">Online Users</a></li>
+          <li>
+            <a
+              class="dropdown-item"
+              href="#"
+              @click="
+                () => {
+                  buttonFilter = 'Unread';
+                }
+              "
+              >Unread</a
+            >
+          </li>
+          <li>
+            <a
+              class="dropdown-item"
+              href="#"
+              @click="
+                () => {
+                  buttonFilter = 'Groups';
+                }
+              "
+              >Groups</a
+            >
+          </li>
+          <li>
+            <a
+              class="dropdown-item"
+              href="#"
+              @click="
+                () => {
+                  buttonFilter = 'Online';
+                }
+              "
+              >Online Users</a
+            >
+          </li>
+          <li>
+            <a
+              class="dropdown-item"
+              href="#"
+              @click="
+                () => {
+                  buttonFilter = 'Everyone';
+                }
+              "
+              >Everyone</a
+            >
+          </li>
         </ul>
       </div>
     </div>
@@ -59,7 +104,13 @@
 </template>
 
 <script setup>
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+} from "firebase/firestore";
 import ChatItem from "./ChatItem.vue";
 import ChatItemPrivate from "./ChatItemPrivate.vue";
 import { db } from "@/firebase";
@@ -67,20 +118,42 @@ import SelectUser from "./SelectUser.vue";
 import { computed, onMounted, ref } from "vue";
 import getUser from "@/composables/getUser";
 
+let buttonFilter = ref("");
 let search = ref("");
 let groups = ref([]);
 let emit = defineEmits(["chat-selected"]);
 let filtered_groups = computed(() => {
   return groups.value.filter((group) => {
-    return group.groupName.toLowerCase().includes(search.value.toLowerCase());
+    let name_condition = group.groupName
+      .toLowerCase()
+      .includes(search.value.toLowerCase());
+    if (buttonFilter.value == "Groups") {
+      return !group.isPrivate && name_condition;
+    }
+    if (buttonFilter.value == "Online") {
+      return name_condition && group.isPrivate && userMap[group.uid].isOnline;
+    }
+    if (buttonFilter.value == "Unread") {
+      return name_condition;
+    }
+    return name_condition;
   });
 });
+
+const usersRef = collection(db, "users");
+
+onSnapshot(usersRef, (snapshot) => {
+  snapshot.docChanges().forEach((change) => {
+    const user = change.doc.data();
+    const userId = change.doc.id;
+    userMap.value[userId] = user;
+  });
+});
+const userMap = ref({});
 
 let groupsRef = collection(db, "groups");
 onMounted(async () => {
   let querySnapshot = await getDocs(groupsRef);
-  const userMap = {}; // or: const userMap = ref({}) if you want it reactive
-
   const userDocs = await getDocs(collection(db, "users"));
   userDocs.forEach((doc) => {
     userMap[doc.id] = doc.data();
@@ -101,6 +174,7 @@ onMounted(async () => {
           groups.value.push({
             id: document.id,
             ...document.data(),
+            uid: other_uid,
             groupName: userMap[other_uid].firstname,
           });
         }
