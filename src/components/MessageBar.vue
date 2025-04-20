@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import { addDoc, collection, doc, getDoc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import getUser from "@/composables/getUser";
 

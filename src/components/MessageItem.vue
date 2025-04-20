@@ -1,35 +1,22 @@
 <template>
   <div class="message-container">
-    <!-- Sent Message -->
     <div
       v-if="message.authorID === userID"
-      class="message message-sent position-relative"
+      class="message message-sent"
     >
-      <!-- Dropdown menu for Edit/Delete -->
-      <div class="dropdown message-options">
+      <div class="d-flex justify-content-end">
+      <button
+            class="btn btn-outline-warning btn-sm"
+            @click="editing = !editing"
+            title="Edit discussion">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
         <button
-          class="btn btn-sm p-0 border-0 bg-transparent text-muted"
-          type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
-          title="Options"
-        >
-          <i class="bi bi-three-dots-vertical"></i>
+                class="btn btn-outline-danger btn-sm me-2"
+                @click="DeleteMessage">
+          <i class="bi bi-trash-fill"></i>
         </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li>
-            <button class="dropdown-item" @click="editing = !editing">
-              <i class="bi bi-pencil-fill me-2"></i> Edit
-            </button>
-          </li>
-          <li>
-            <button class="dropdown-item text-danger" @click="DeleteMessage">
-              <i class="bi bi-trash-fill me-2"></i> Delete
-            </button>
-          </li>
-        </ul>
-      </div>
-
+        </div>
       <!-- Edit Mode -->
       <div v-if="editing" class="mb-3">
         <textarea class="form-control mb-2" v-model="message.text" rows="3" placeholder="Content"></textarea>
@@ -38,25 +25,22 @@
           <button class="btn btn-outline-secondary btn-sm" @click="editing = false">Cancel</button>
         </div>
       </div>
-
       <!-- View Mode -->
       <div v-else>
-        <div class="message-body">
-          {{ message.text }}
-        </div>
-        <div class="message-footer">
-          <span :key="message.date" class="message-time">
-            {{ message.date?.toDate?.()?.toLocaleTimeString() || new Date(message.date).toLocaleTimeString() }}
-          </span>
-          <span class="message-status">
-            {{ allRead() ? "✔✔" : "✔" }}
-          </span>
-        </div>
-        <span v-if="message.edited" class="edited">Edited</span>
+      <div class="message-body">
+        {{ message.text }}
+      </div>
+      <div class="message-footer">
+        <span :key="message.date" class="message-time">
+          {{ message.date?.toDate?.()?.toLocaleTimeString() || new Date(message.date).toLocaleTimeString() }}
+        </span>
+        <span class="message-status">
+          {{ allRead() ? "✔✔" : "✔" }}
+        </span>
       </div>
     </div>
-
-    <!-- Received Message -->
+      <span v-if="message.edited" class="edited">Edited</span>
+      </div>
     <div
       v-else
       class="message message-received"
@@ -66,6 +50,7 @@
           :src="author.pdp"
           alt="Profile Picture"
           class="author-avatar"
+          @click = "() => router.push('/profile/' + message.authorID)"
         />
         <span class="author-name">
           {{ author.firstname + ' ' + author.lastname }}
@@ -87,7 +72,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
 import { db } from "@/firebase";
-import { getDoc, doc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
+import { getDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { useRouter } from "vue-router";
 
 const props = defineProps({
   messageID: {
@@ -106,7 +92,7 @@ const props = defineProps({
 
 let editing = ref(false);
 const author = ref({});
-const message = ref({});
+const router = useRouter();
 
 async function UpdateMessage() {
   const messageDoc = doc(db, "groups", props.groupID, "messages", props.messageID);
@@ -116,7 +102,7 @@ async function UpdateMessage() {
   }
   message.value.edited = true;
   await updateDoc(messageDoc, {
-    ...message.value,
+    ... message.value,
     text: message.value.text,
     edited: true,
   });
@@ -135,13 +121,19 @@ function allRead() {
   return true;
 }
 
+const message = ref({});
+import { onSnapshot } from "firebase/firestore"; // Add this import
+
+// Replace onMounted with this:
 onMounted(() => {
   const messageDoc = doc(db, "groups", props.groupID, "messages", props.messageID);
 
+  // Set up real-time listener
   const unsubscribe = onSnapshot(messageDoc, async (docSnap) => {
     if (docSnap.exists()) {
       message.value = docSnap.data();
 
+      // Fetch author data (only once, since it doesn't change often)
       if (!author.value.firstname) {
         const authorDoc = doc(db, "users", message.value.authorID);
         const authorSnap = await getDoc(authorDoc);
@@ -150,8 +142,9 @@ onMounted(() => {
         }
       }
 
+      // Mark as read if current user is not the author
       if (message.value.authorID !== props.userID) {
-        message.value.readby = message.value.readby || {};
+        message.value.readby = message.value.readby || {}; // Ensure `readby` exists
         if (!message.value.readby[props.userID]) {
           message.value.readby[props.userID] = true;
           await updateDoc(messageDoc, {
@@ -162,6 +155,7 @@ onMounted(() => {
     }
   });
 
+  // Clean up listener when component unmounts
   onUnmounted(() => unsubscribe());
 });
 </script>
@@ -266,8 +260,7 @@ onMounted(() => {
   font-size: 0.75rem;
   color: #4d7c50;
 }
-
-.edited {
+.edited{
   font-size: 0.75rem;
   color: #8cb369;
   display: flex;

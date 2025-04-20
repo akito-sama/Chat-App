@@ -38,7 +38,7 @@
         </router-link>
       </template>
       <template v-else>
-        <router-link v-if="userInfo && userInfo.uid" :to="`/users/${userInfo?.uid}`" class="nature-nav-item d-flex align-items-center mb-2 p-2">
+        <router-link v-if="userInfo && userInfo.uid" :to="`/profile/${userInfo?.uid}`" class="nature-nav-item d-flex align-items-center mb-2 p-2">
           <i class="bi bi-person-circle me-3"></i>
           <span>View Profile</span>
         </router-link>
@@ -67,32 +67,28 @@
   </nav>
 </template>
 
+
 <script setup>
 import { inject, onMounted, onUnmounted } from 'vue'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth, db } from '@/firebase'
 import { useRouter } from 'vue-router'
 import { doc, updateDoc } from 'firebase/firestore'
-
 const logged_in = inject('logged_in')
 const userInfo = inject('userDoc')
 const router = useRouter()
 
-// Set user's online status on mount
 onMounted(async () => {
   try {
-    if (auth.currentUser) {
-      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-        isOnline: true
-      });
-      await router.push('/')
-    }
+    await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+      isOnline: true
+    });
+    await router.push('/')
   } catch (err) {
     console.log('Error while setting presence:', err)
   }
 })
 
-// Listen to auth state changes and update online status
 onAuthStateChanged(auth, async (user) => {
   if (user === null) return;
   try {
@@ -103,30 +99,24 @@ onAuthStateChanged(auth, async (user) => {
   } catch (err) {
     console.log('Error while setting presence:', err)
   }
-})
+});
 
-// Set user's offline status when unmounted
 onUnmounted(async () => {
   try {
-    if (auth.currentUser) {
-      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-        isOnline: false
-      });
-      await router.push('/')
-    }
+    await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+      isOnline: false
+    });
+    await router.push('/')
   } catch (err) {
     console.log('Error while setting presence:', err)
   }
-})
+});
 
-// Logout function
 const logout = async () => {
   try {
-    if (auth.currentUser) {
-      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-        isOnline: false
-      });
-    }
+    await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+      isOnline: false
+    });
     await signOut(auth)
     console.log('Logged out successfully')
     await router.push('/')
