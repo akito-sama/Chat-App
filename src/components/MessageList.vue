@@ -46,6 +46,7 @@ import {
   onSnapshot,
   doc,
   getDoc,
+  updateDoc,
 } from "firebase/firestore";
 import MessageItem from "@/components/MessageItem.vue";
 import ChatLegend from "@/components/ChatLegend.vue";
@@ -71,6 +72,10 @@ onSnapshot(
     messages.value = [];
     querySnapshot.forEach((doc) => {
       messages.value.push({ id: doc.id, ...doc.data() });
+    });
+    // Update last message in group
+    await updateDoc(doc(db, "groups", props.groupID), {
+      lastMessage: messages.value[messages.value.length - 1],
     });
     await nextTick();
     window.scrollTo(0, document.body.scrollHeight);
