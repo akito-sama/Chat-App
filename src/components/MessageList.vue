@@ -1,4 +1,7 @@
 <template>
+  <div class="sticky-top bg-white z-3 border-bottom">
+    <ChatLegend :groupID="props.groupID"/>
+  </div>
   <div class="d-flex flex-column h-100">
     <!-- Messages container -->
     <div class="flex-grow-1 overflow-auto mb-2 px-3" style="max-height: 100%">
@@ -25,13 +28,9 @@
 <script setup>
 import { ref, nextTick, onMounted } from "vue";
 import { db } from "@/firebase";
-import {
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
-} from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import MessageItem from "@/components/MessageItem.vue";
+import ChatLegend from "@/components/ChatLegend.vue";
 
 const props = defineProps({
   userID: {
@@ -62,7 +61,7 @@ onMounted(() => {
   messages.value.sort((a, b) => {
     return b.date - a.date;
   });
-})
+});
 </script>
 
 <style scoped>
