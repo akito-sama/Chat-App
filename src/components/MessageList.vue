@@ -3,13 +3,7 @@
     <!-- Chat Legend (sticky header) -->
     <div class="flex-shrink-0 sticky-top bg-white z-3 border-bottom">
       <component
-        :is="
-          isPrivate === true
-            ? ChatLegendPrivate
-            : isPrivate === false
-            ? ChatLegend
-            : null
-        "
+        :is="isPrivate === true ? ChatLegendPrivate : isPrivate === false ? ChatLegend : null"
         v-if="isPrivate !== null"
         :groupID="props.groupID"
       />
@@ -19,7 +13,8 @@
       <div v-if="messages.length === 0" class="text-center mt-3 text-muted">
         <p>No messages yet.</p>
       </div>
-      <ul>
+      <!-- Use transition-group for smooth animations -->
+      <transition-group name="message" tag="ul">
         <li
           v-for="message in messages"
           :key="message.id"
@@ -31,7 +26,7 @@
             :messageID="message.id"
           />
         </li>
-      </ul>
+      </transition-group>
     </div>
   </div>
 </template>
@@ -70,12 +65,14 @@ onSnapshot(
   query(collection(db, "groups", props.groupID, "messages"), orderBy("date")),
   async (querySnapshot) => {
     messages.value = [];
-    querySnapshot.forEach((doc) => {
-      messages.value.push({ id: doc.id, ...doc.data() });
+    querySnapshot.forEach((docSnap) => {
+      messages.value.push({ id: docSnap.id, ...docSnap.data() });
     });
     // Update last message in group
     await updateDoc(doc(db, "groups", props.groupID), {
-      lastMessage: (messages.value.length) ? messages.value[messages.value.length - 1] : {},
+      lastMessage: messages.value.length
+        ? messages.value[messages.value.length - 1]
+        : {},
     });
     await nextTick();
     window.scrollTo(0, document.body.scrollHeight);
@@ -92,6 +89,23 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Transition styles for message items */
+.message-enter-active,
+.message-leave-active {
+  transition: all 0.5s ease;
+}
+.message-enter-from,
+.message-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.message-enter-to,
+.message-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Container styles */
 .writeSection {
   background-color: white;
 }
