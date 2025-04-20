@@ -34,9 +34,16 @@
 <script setup>
 import { ref, computed, defineEmits, onMounted } from "vue";
 import { db } from "@/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import UserItem from "../components/UserItem.vue";
 import getUser from "@/composables/getUser";
+
+const props = defineProps({
+  userIds: {
+    type: Array,
+    default: null,
+  },
+});
 
 const emit = defineEmits(["user-selected"]);
 
@@ -44,14 +51,14 @@ const users = ref([]);
 const search = ref("");
 const dropdownOpen = ref(false);
 const selected = ref("");
-const authuser = getUser().user.value
+const authuser = getUser().user.value;
 
 const filtered_users = computed(() => {
   return users.value
     .filter((user) =>
       user.firstname.toLowerCase().includes(search.value.toLowerCase())
     )
-    .filter((user) => user.id !== selected.value && user.id != authuser.uid)
+    .filter((user) => user.id !== selected.value && user.id !== authuser.uid)
     .slice(0, 15);
 });
 
@@ -67,10 +74,19 @@ const selectUser = (userId) => {
 };
 
 onMounted(async () => {
-  const usersRef = collection(db, "users");
-  const querySnapshot = await getDocs(usersRef);
-  querySnapshot.forEach((doc) => {
-    users.value.push({ id: doc.id, ...doc.data() });
-  });
+  if (props.userIds) {
+    for (const uid of props.userIds) {
+      const docSnap = await getDoc(doc(db, "users", uid));
+      if (docSnap.exists()) {
+        users.value.push({ id: uid, ...docSnap.data() });
+      }
+    }
+  } else {
+    const usersRef = collection(db, "users");
+    const querySnapshot = await getDocs(usersRef);
+    querySnapshot.forEach((doc) => {
+      users.value.push({ id: doc.id, ...doc.data() });
+    });
+  }
 });
 </script>

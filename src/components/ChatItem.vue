@@ -1,6 +1,5 @@
 <template>
   <div class="d-flex align-items-center justify-content-between gap-2">
-    <!-- Left: avatar and name -->
     <div class="d-flex align-items-center gap-2">
       <img
         :src="groupPDP"
@@ -10,6 +9,7 @@
         height="40"
       />
       <span>{{ groupName }}</span>
+      <span>{{ lastMessage }}</span>
     </div>
   </div>
 </template>
@@ -25,7 +25,7 @@ const props = defineProps({ GroupId: String });
 
 let groupName = ref("");
 let groupPDP = ref("");
-let state = ref("");
+let lastMessage = ref("");
 
 const groupRef = doc(db, "groups", props.GroupId);
 
@@ -33,6 +33,7 @@ onSnapshot(groupRef, (docSnap) => {
   if (docSnap.exists()) {
     groupName.value = docSnap.data().groupName;
     groupPDP.value = docSnap.data().groupPDP;
+    lastMessage.value = docSnap.data().lastMessage;
   }
 });
 
