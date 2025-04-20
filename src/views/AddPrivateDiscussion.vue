@@ -67,9 +67,9 @@ const filtered_users = computed(() => {
     .filter((user) => {
       // console.log(authuser.value.uid, user.id);
       return (
-        user.firstname.toLowerCase().includes(search.value.toLowerCase()) &&
-        selected.value != user.id &&
-        authuser.value.uid != user.id
+        user.firstname && user.firstname.toLowerCase().includes(search.value.toLowerCase()) &&
+        selected.value !== user.id &&
+        authuser.value.uid !== user.id
       );
     })
     .slice(0, 15);
