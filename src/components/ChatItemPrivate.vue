@@ -9,7 +9,15 @@
         height="48"
       />
       <div>
-        <h6 class="mb-1 fw-semibold">{{ Name }}</h6>
+        <h6 class="mb-1 fw-semibold d-flex align-items-center gap-2">
+          {{ Name }}
+          <span
+            class="rounded-circle"
+            :class="isOnline ? 'bg-success' : 'bg-secondary'"
+            style="width: 10px; height: 10px;"
+            title="Status"
+          ></span>
+        </h6>
         <p class="mb-0 text-muted small">{{ lastMessage.text }}</p>
       </div>
     </div>
@@ -18,6 +26,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup>
 import getUser from "@/composables/getUser";
@@ -34,6 +43,34 @@ const user = getUser().user.value;
 const useruid = user?.uid;
 
 const groupRef = doc(db, "groups", props.GroupId);
+
+const isOnline = ref(false);
+
+onMounted(async () => {
+  if (!useruid) return;
+
+  const groupSnap = await getDoc(groupRef);
+  if (groupSnap.exists()) {
+    const data = groupSnap.data();
+    const members = data.groupMembers;
+    const other_uid = members.find((id) => id !== useruid);
+
+    const userRef = doc(db, "users", other_uid);
+
+    // Live update for isOnline
+    onSnapshot(userRef, (snap) => {
+      if (snap.exists()) {
+        const userData = snap.data();
+        Name.value = userData.firstname;
+        PDP.value = userData.pdp;
+        isOnline.value = userData.isOnline;
+      }
+    });
+
+    lastMessage.value = data.lastMessage || {};
+  }
+});
+
 
 // Load name + PDP of other user
 onMounted(async () => {

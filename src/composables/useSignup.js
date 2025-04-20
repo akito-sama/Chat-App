@@ -46,10 +46,10 @@ const useSignup = () => {
         bio: bio.value,
         isOnline: true,
         groups: [],
-        pdp: pdp.value ? pdp.value : 'https://i.postimg.cc/05zJ6r52/duck-default.png', 
         birthday: birthday.value,
         createdAt: new Date(),
         role: "user",
+        pdp: pdp.value ? pdp.value : 'https://i.postimg.cc/05zJ6r52/duck-default.png', 
       });
 
       console.log('Registered and user data saved to Firestore.');

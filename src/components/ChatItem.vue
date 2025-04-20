@@ -1,7 +1,7 @@
 <template>
   <div class="d-flex align-items-center justify-content-between p-2 border rounded shadow-sm bg-white">
     <!-- Left: Avatar + Info -->
-    <div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center gap-3 flex-grow-1">
       <img
         :src="groupPDP"
         alt="PDP"
@@ -9,18 +9,19 @@
         width="48"
         height="48"
       />
-      <div>
+      <div class="text-start">
         <h6 class="mb-1 fw-semibold">{{ groupName }}</h6>
         <p class="mb-0 text-muted small">{{ lastMessage.text }}</p>
       </div>
     </div>
 
     <!-- Right: Time -->
-    <div class="text-muted small">
+    <div class="text-muted small ms-3 text-nowrap">
       {{ formattedTime }}
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { db } from "@/firebase";
