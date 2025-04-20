@@ -69,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { db } from "@/firebase";
 import { getDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 
@@ -119,22 +119,41 @@ function allRead() {
 }
 
 const message = ref({});
-onMounted(async () => {
+import { onSnapshot } from "firebase/firestore"; // Add this import
+
+// Replace onMounted with this:
+onMounted(() => {
   const messageDoc = doc(db, "groups", props.groupID, "messages", props.messageID);
-  await getDoc(messageDoc).then((docSnap) => {
-    message.value = docSnap.data();
+
+  // Set up real-time listener
+  const unsubscribe = onSnapshot(messageDoc, async (docSnap) => {
+    if (docSnap.exists()) {
+      message.value = docSnap.data();
+
+      // Fetch author data (only once, since it doesn't change often)
+      if (!author.value.firstname) {
+        const authorDoc = doc(db, "users", message.value.authorID);
+        const authorSnap = await getDoc(authorDoc);
+        if (authorSnap.exists()) {
+          author.value = authorSnap.data();
+        }
+      }
+
+      // Mark as read if current user is not the author
+      if (message.value.authorID !== props.userID) {
+        message.value.readby = message.value.readby || {}; // Ensure `readby` exists
+        if (!message.value.readby[props.userID]) {
+          message.value.readby[props.userID] = true;
+          await updateDoc(messageDoc, {
+            readby: message.value.readby,
+          });
+        }
+      }
+    }
   });
-  const authorDoc = doc(db, "users", message.value.authorID);
-  await getDoc(authorDoc).then((docSnap) => {
-    author.value = docSnap.data();
-  });
-  if (message.value.authorID !== props.userID) {
-    message.value.readby[props.userID] = true;
-    await updateDoc(messageDoc, {
-      readby: message.value.readby,
-    });
-  }
-  console.log(message.value);
+
+  // Clean up listener when component unmounts
+  onUnmounted(() => unsubscribe());
 });
 </script>
 
