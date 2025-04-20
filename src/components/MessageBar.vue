@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import { addDoc, collection, doc, getDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import getUser from "@/composables/getUser";
 
@@ -34,6 +34,9 @@ async function sendMessage() {
   };
   newMessage.value = "";
   await addDoc(collection(db, "groups", props.groupID, "messages"), message);
+  await updateDoc(doc(db, "groups", props.groupID), {
+    lastMessage: message.text,
+  });
   window.scrollTo(0, document.body.scrollHeight);
 }
 async function getAllMembers() {
