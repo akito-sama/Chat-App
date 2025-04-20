@@ -3,7 +3,6 @@ import Home from "../views/Home.vue"
 import Register from "../views/Register.vue"
 import Login from "../views/Login.vue"
 import Private from "../views/Private.vue"
-import User from "../views/User.vue"
 import Notification from "../views/Notifs.vue"
 import CreateGroup from "../views/CreateGroup.vue"
 import AddPrivateDiscussion from "../views/AddPrivateDiscussion.vue"
@@ -46,10 +45,9 @@ const routes = [
     component: Notification,
   },
   {
-    path: '/users/:userId',
-    name: 'users',
-    component: User,
-    props: true
+    path: '/profile/:id',
+    name: 'profile',
+    component: () => import('../views/Profile.vue'),
   }
 ]
 

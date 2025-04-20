@@ -33,7 +33,7 @@ async function sendMessage() {
     date: new Date(),
   };
   newMessage.value = "";
-  await addDoc(collection(db, "groups", props.groupID, "messages"), message);
+  await addDoc(collection(db, "groups", props.groupID, "messages"), message);F
   window.scrollTo(0, document.body.scrollHeight);
 }
 async function getAllMembers() {
