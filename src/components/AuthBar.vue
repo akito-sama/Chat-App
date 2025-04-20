@@ -73,11 +73,10 @@
 
 <script setup>
 import { inject, onMounted, onUnmounted } from 'vue'
-import { signOut } from 'firebase/auth'
-import { auth } from '@/firebase'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { auth, db } from '@/firebase'
 import { useRouter } from 'vue-router'
-import { updateDoc } from 'firebase/firestore'
-
+import { doc, updateDoc } from 'firebase/firestore'
 const logged_in = inject('logged_in')
 const userInfo = inject('userDoc')
 const router = useRouter()
@@ -92,6 +91,18 @@ onMounted(async () => {
     console.log('Error while setting presence:', err)
   }
 })
+
+onAuthStateChanged(auth, async (user) => {
+  if (user === null) return;
+  try {
+    await updateDoc(doc(db, 'users', user.uid), {
+      isOnline: true
+    });
+    await router.push('/')
+  } catch (err) {
+    console.log('Error while setting presence:', err)
+  }
+});
 
 onUnmounted(async () => {
   try {

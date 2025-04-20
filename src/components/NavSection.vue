@@ -69,7 +69,7 @@
               href="#"
               @click="
                 () => {
-                  buttonFilter = 'Everyone';
+                  buttonFilter = '';
                 }
               "
               >Everyone</a
@@ -141,6 +141,7 @@ let filtered_groups = computed(() => {
 });
 
 const usersRef = collection(db, "users");
+const groupRef = collection(db, "groups");
 
 onSnapshot(usersRef, (snapshot) => {
   snapshot.docChanges().forEach((change) => {
@@ -149,6 +150,32 @@ onSnapshot(usersRef, (snapshot) => {
     userMap.value[userId] = user;
   });
 });
+
+onSnapshot(groupRef, (snapshot) => {
+  snapshot.docChanges().forEach((change) => {
+    if (change.type === "added") {
+      let data = change.doc.data();
+      if (data.groupMembers.includes(getUser().user.value.uid)) {
+        if (!data.isPrivate) {
+          groups.value.push({ id: change.doc.id, ...data });
+        } else {
+          let useruid = getUser().user.value.uid;
+          let members = change.doc.data().groupMembers;
+          let other_uid = members[0] === useruid ? members[1] : members[0];
+          if (other_uid in userMap) {
+            groups.value.push({
+              id: change.doc.id,
+              ...change.doc.data(),
+              uid: other_uid,
+              groupName: userMap[other_uid].firstname,
+            });
+          }
+        }
+      }
+    }
+  });
+});
+
 const userMap = ref({});
 
 let groupsRef = collection(db, "groups");
