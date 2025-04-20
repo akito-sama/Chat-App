@@ -1,7 +1,21 @@
 <template>
   <div class="d-flex flex-column h-100">
+    <!-- Chat Legend (sticky header) -->
+    <div class="flex-shrink-0 sticky-top bg-white z-3 border-bottom">
+      <component
+        :is="
+          isPrivate === true
+            ? ChatLegendPrivate
+            : isPrivate === false
+            ? ChatLegend
+            : null
+        "
+        v-if="isPrivate !== null"
+        :groupID="props.groupID"
+      />
+    </div>
     <!-- Messages container -->
-    <div class="flex-grow-1 overflow-auto mb-2 px-3" style="max-height: 100%">
+    <div class="flex-grow-1 overflow-auto mb-2 px-3 messages-container">
       <div v-if="messages.length === 0" class="text-center mt-3 text-muted">
         <p>No messages yet.</p>
       </div>
@@ -30,8 +44,12 @@ import {
   query,
   orderBy,
   onSnapshot,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import MessageItem from "@/components/MessageItem.vue";
+import ChatLegend from "@/components/ChatLegend.vue";
+import ChatLegendPrivate from "@/components/ChatLegendPrivate.vue";
 
 const props = defineProps({
   userID: {
@@ -45,6 +63,7 @@ const props = defineProps({
 });
 
 const messages = ref([]);
+const isPrivate = ref(null);
 
 onSnapshot(
   query(collection(db, "groups", props.groupID, "messages"), orderBy("date")),
@@ -53,16 +72,21 @@ onSnapshot(
     querySnapshot.forEach((doc) => {
       messages.value.push({ id: doc.id, ...doc.data() });
     });
-    await nextTick(); // Add this line
+    await nextTick();
     window.scrollTo(0, document.body.scrollHeight);
   }
 );
 
-onMounted(() => {
+onMounted(async () => {
+  // Fetch group info to determine if it's private
+  const groupDoc = await getDoc(doc(db, "groups", props.groupID));
+  if (groupDoc.exists()) {
+    isPrivate.value = groupDoc.data().isPrivate;
+  }
   messages.value.sort((a, b) => {
     return b.date - a.date;
   });
-})
+});
 </script>
 
 <style scoped>
@@ -70,12 +94,17 @@ onMounted(() => {
   background-color: white;
 }
 
-/* Make messages start from the bottom and scroll up */
-.flex-grow-1 {
+.d-flex.h-100 {
+  height: 100%;
+}
+
+.flex-grow-1.messages-container {
   display: flex;
   flex-direction: column-reverse;
   justify-content: flex-start;
   overflow-y: auto;
+  height: 0;
+  min-height: 0;
 }
 
 ul.list-unstyled {
