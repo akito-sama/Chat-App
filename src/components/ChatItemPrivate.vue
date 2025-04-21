@@ -101,11 +101,34 @@ onSnapshot(groupRef, (docSnap) => {
 
 // Format timestamp WhatsApp style
 const formattedTime = computed(() => {
-  const date = lastMessage.value.date?.toDate?.() || null;
-  if (!date) return '';
-  return date.toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const timestamp = lastMessage.value.date?.toDate?.();
+  if (!timestamp) return '';
+
+  const now = new Date();
+  const diff = now - timestamp;
+
+  const oneDay = 24 * 60 * 60 * 1000;
+  const sevenDays = 7 * oneDay;
+
+  if (diff < oneDay && now.getDate() === timestamp.getDate()) {
+    // Same day: show time
+    return timestamp.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } else if (diff < sevenDays) {
+    // Within the last week: show weekday
+    return timestamp.toLocaleDateString('en-GB', {
+      weekday: 'short',
+    });
+  } else {
+    // Older: show date
+    return timestamp.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  }
 });
+
 </script>
