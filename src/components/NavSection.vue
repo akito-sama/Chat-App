@@ -130,26 +130,45 @@ let search = ref("");
 let groups = ref([]);
 let emit = defineEmits(["chat-selected"]);
 let filtered_groups = computed(() => {
-  return groups.value.filter((group) => {
-    let name_condition = group.groupName
-      .toLowerCase()
-      .includes(search.value.toLowerCase());
-    if (buttonFilter.value == "Groups") {
-      return !group.isPrivate && name_condition;
-    }
-    if (buttonFilter.value == "Online") {
-      return name_condition && group.isPrivate && userMap[group.uid].isOnline;
-    }
-    if (buttonFilter.value == "Unread") {
-      return name_condition && !(group.lastMessage.readby[getUser().user.value.uid] || group.lastMessage.authorID === getUser().user.value.uid);
-    }
-    return name_condition;
-  }).sort((a, b) => {
-      const aDate = a.lastMessage?.date?.toDate?.() ?? new Date();
-      const bDate = b.lastMessage?.date?.toDate?.() ?? new Date();
+  return groups.value
+    .filter((group) => {
+      const name_condition = group.groupName
+        .toLowerCase()
+        .includes(search.value.toLowerCase());
+
+      if (buttonFilter.value === "Groups") {
+        return !group.isPrivate && name_condition;
+      }
+
+      if (buttonFilter.value === "Online") {
+        return (
+          name_condition &&
+          group.isPrivate &&
+          userMap[group.uid]?.isOnline
+        );
+      }
+
+      if (buttonFilter.value === "Unread") {
+        const currentUserId = getUser().user.value.uid;
+        const readBy = group.lastMessage?.readby ?? {};
+        const isAuthor = group.lastMessage?.authorID === currentUserId;
+
+        return (
+          name_condition &&
+          !readBy[currentUserId] &&
+          !isAuthor
+        );
+      }
+
+      return name_condition;
+    })
+    .sort((a, b) => {
+      const aDate = a.lastMessage?.date?.toDate?.() ?? new Date(0);
+      const bDate = b.lastMessage?.date?.toDate?.() ?? new Date(0);
       return bDate - aDate;
     });
 });
+
 
 const usersRef = collection(db, "users");
 const groupRef = collection(db, "groups");
@@ -164,40 +183,86 @@ onSnapshot(usersRef, (snapshot) => {
 
 onSnapshot(groupRef, (snapshot) => {
   snapshot.docChanges().forEach((change) => {
-    if (change.type === "modified") {
-        let index = groups.value.find((group) => group.id === change.doc.id);
-        console.log("data: ", index);
-        if (!index) {
-            return
-        } else {
-            Object.assign(index, change.doc.data());
-        }
-    }
+    const docData = change.doc.data();
+    const docId = change.doc.id;
+    const currentUserId = getUser().user.value.uid;
+
+    const groupIndex = groups.value.findIndex((group) => group.id === docId);
+
+    const isGroupForUser =
+      docData.groupMembers.includes(currentUserId) ||
+      (!docData.isPrivate && docData.groupAdmins?.includes(currentUserId));
+
     if (change.type === "added") {
-      let data = change.doc.data();
-      if (
-        data.groupMembers.includes(getUser().user.value.uid) &&
-        !groups.value.find((group) => group.id === change.doc.id)
-      ) {
-        if (!data.isPrivate) {
-          groups.value.push({ id: change.doc.id, ...data });
+      if (isGroupForUser && groupIndex === -1) {
+        if (!docData.isPrivate) {
+          groups.value.push({ id: docId, ...docData });
         } else {
-          let useruid = getUser().user.value.uid;
-          let members = change.doc.data().groupMembers;
-          let other_uid = members[0] === useruid ? members[1] : members[0];
-          if (other_uid in userMap) {
+          const other_uid =
+            docData.groupMembers.find((uid) => uid !== currentUserId);
+          if (userMap.value[other_uid]) {
             groups.value.push({
-              id: change.doc.id,
-              ...change.doc.data(),
+              id: docId,
+              ...docData,
               uid: other_uid,
-              groupName: userMap[other_uid].firstname,
+              groupName: userMap.value[other_uid].firstname,
             });
           }
         }
       }
     }
+
+    if (change.type === "modified") {
+      // Case 1: User has been newly added
+      if (groupIndex === -1 && isGroupForUser) {
+        if (!docData.isPrivate) {
+          groups.value.push({ id: docId, ...docData });
+        } else {
+          const other_uid =
+            docData.groupMembers.find((uid) => uid !== currentUserId);
+          if (userMap.value[other_uid]) {
+            groups.value.push({
+              id: docId,
+              ...docData,
+              uid: other_uid,
+              groupName: userMap.value[other_uid].firstname,
+            });
+          }
+        }
+      }
+
+      // Case 2: Group already exists in list → update its data
+      if (groupIndex !== -1) {
+        if (!docData.isPrivate) {
+          groups.value[groupIndex] = { id: docId, ...docData };
+        } else {
+          const other_uid =
+            docData.groupMembers.find((uid) => uid !== currentUserId);
+          if (userMap.value[other_uid]) {
+            groups.value[groupIndex] = {
+              id: docId,
+              ...docData,
+              uid: other_uid,
+              groupName: userMap.value[other_uid].firstname,
+            };
+          }
+        }
+      }
+
+      // Case 3: User was removed from the group → remove from UI
+      if (groupIndex !== -1 && !isGroupForUser) {
+        groups.value.splice(groupIndex, 1);
+      }
+    }
+
+    if (change.type === "removed") {
+      if (groupIndex !== -1) {
+        groups.value.splice(groupIndex, 1);
+      }
+    }
   });
 });
+// 
 
 const userMap = ref({});
 
