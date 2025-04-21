@@ -58,6 +58,8 @@ import {
   collection,
   doc,
   getDocs,
+  query,
+  where,
   updateDoc,
 } from "firebase/firestore";
 import { computed, onMounted, ref } from "vue";
@@ -71,16 +73,20 @@ const users = ref([]);
 const search = ref("");
 const dropdownOpen = ref(false);
 const selected = ref("");
+const currentUserDocId = ref(""); // ID of the logged-in user in /users
+
+const existingPrivateChatUserIds = ref(new Set());
 
 const filtered_users = computed(() => {
   return users.value
     .filter((user) => {
       return (
         user.firstname &&
-        typeof user.firstname === 'string' &&
+        typeof user.firstname === "string" &&
         user.firstname.toLowerCase().includes(search.value.toLowerCase()) &&
         selected.value !== user.id &&
-        authuser.value.uid !== user.id
+        currentUserDocId.value !== user.id &&
+        !existingPrivateChatUserIds.value.has(user.id)
       );
     })
     .slice(0, 15);
@@ -95,12 +101,12 @@ const router = useRouter();
 const handleSubmit = async () => {
   try {
     let request = await addDoc(groupsRef, {
-      groupMembers: [selected.value, authuser.value.uid],
+      groupMembers: [selected.value, currentUserDocId.value],
       isPrivate: true,
       lastMessage: "",
     });
 
-    let userRef1 = doc(db, "users", authuser.value.uid);
+    let userRef1 = doc(db, "users", currentUserDocId.value);
     let userRef2 = doc(db, "users", selected.value);
 
     await Promise.all([
@@ -121,6 +127,7 @@ const handleSubmit = async () => {
 };
 
 onMounted(async () => {
+  // Get list of users
   const usersRef = collection(db, "users");
   const querySnapshot = await getDocs(usersRef);
   querySnapshot.forEach((docSnap) => {
@@ -128,6 +135,24 @@ onMounted(async () => {
       id: docSnap.id,
       ...docSnap.data(),
     });
+
+    // Match auth user to /users doc
+    if (docSnap.data().email === authuser.value.email) {
+      currentUserDocId.value = docSnap.id;
+    }
+  });
+
+  // Fetch existing private chats
+  const q = query(groupsRef, where("isPrivate", "==", true));
+  const groupSnaps = await getDocs(q);
+  groupSnaps.forEach((groupDoc) => {
+    const members = groupDoc.data().groupMembers;
+    if (members.includes(currentUserDocId.value)) {
+      const otherId = members.find((id) => id !== currentUserDocId.value);
+      if (otherId) {
+        existingPrivateChatUserIds.value.add(otherId);
+      }
+    }
   });
 });
 </script>
