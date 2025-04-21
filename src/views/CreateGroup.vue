@@ -125,21 +125,21 @@ import {
 import UserItem from "../components/UserItem.vue";
 import getUser from "../composables/getUser";
 
-// Refs & state
-const fileInput = ref(null);
+// State
 const name = ref("");
 const text = ref("");
 const search = ref("");
 const dropdownOpen = ref(false);
 const selected = ref([]);
 const groupPDP = ref("");
+const fileInput = ref(null);
 const users = ref([]);
 const authuser = getUser().user;
 const groupsRef = collection(db, "groups");
 
 const router = useRouter();
 
-// Computed for user search
+// Computed: filter out already selected users
 const filtered_users = computed(() =>
   users.value
     .filter(
@@ -151,71 +151,39 @@ const filtered_users = computed(() =>
     .slice(0, 15)
 );
 
-// File input trigger
-const triggerFileInput = () => {
-  if (fileInput.value) fileInput.value.click();
-};
+// File input trigger (clickable upload area)
+function triggerFileInput() {
+  fileInput.value?.click();
+}
 
-// Upload helper (now included!)
-const uploadImage = async (file) => {
-  await uploadImageToGitHub(file);
-};
-
-// GitHub upload logic
-const uploadImageToGitHub = async (file) => {
-  const reader = new FileReader();
-  reader.onload = async () => {
-    const base64Content = reader.result.split(",")[1];
-    const fileName = `${Date.now()}_${file.name}`;
-    const repoOwner = "MouadBensafir";
-    const repoName = "ImageUpload";
-    const branch = "main";
-    const githubToken = "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";
-
-    const response = await fetch(
-      `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${fileName}`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: `Add group image ${fileName}`,
-          content: base64Content,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      console.error("GitHub Upload Error:", await response.text());
-      return;
-    }
-
-    const data = await response.json();
-    groupPDP.value = data.content.download_url;
-  };
-
-  reader.readAsDataURL(file);
-};
-
-// File input + drop logic
 const handleFileSelect = (event) => {
   const file = event.target.files[0];
-  if (file) uploadImage(file);
+  uploadImage(file);
 };
 
 const handleFileDrop = (event) => {
+  event.preventDefault();
   const file = event.dataTransfer.files[0];
-  if (file) uploadImage(file);
+  uploadImage(file);
 };
 
-// Dropdown toggle
+const uploadImage = (file) => {
+  if (!file || !file.type.startsWith("image/")) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    groupPDP.value = reader.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+
+// Toggle user dropdown
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value;
 };
 
-// Form submit
+// Submit group form
 const handleSubmit = async () => {
   try {
     const request = await addDoc(groupsRef, {
@@ -228,9 +196,8 @@ const handleSubmit = async () => {
       lastMessage: "",
     });
 
-    // Update group refs for each user
-    for (let i = 0; i < selected.value.length; i++) {
-      const userRef = doc(db, "users", selected.value[i]);
+    for (const uid of selected.value) {
+      const userRef = doc(db, "users", uid);
       await updateDoc(userRef, {
         groups: arrayUnion(request.id),
       });
@@ -241,11 +208,11 @@ const handleSubmit = async () => {
       groups: arrayUnion(request.id),
     });
 
-    // Cleanup
-    selected.value = [];
+    // Reset
     name.value = "";
     text.value = "";
     groupPDP.value = "";
+    selected.value = [];
     dropdownOpen.value = false;
     router.push("/");
   } catch (err) {
@@ -253,7 +220,7 @@ const handleSubmit = async () => {
   }
 };
 
-// Load users
+// Fetch users on mount
 onMounted(async () => {
   const usersRef = collection(db, "users");
   const querySnapshot = await getDocs(usersRef);
@@ -262,6 +229,7 @@ onMounted(async () => {
   });
 });
 </script>
+
 
 <style scoped>
 .upload-box {
