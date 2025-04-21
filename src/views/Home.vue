@@ -30,10 +30,10 @@
   <div v-else class="nature-login-container">
     <i class="bi bi-door-closed nature-login-icon"></i>
     <h2 class="nature-login-title">Welcome to ShutApp 👊</h2>
-    <p class="nature-login-text">Please log in to start chatting with your friends and groups.</p>
-    <router-link to="/login" class="nature-login-btn">
-      Log In
-    </router-link>
+    <p class="nature-login-text">
+      Please log in to start chatting with your friends and groups.
+    </p>
+    <router-link to="/login" class="nature-login-btn"> Log In </router-link>
   </div>
 </template>
 
@@ -43,7 +43,7 @@ import MessageList from "@/components/MessageList.vue";
 import { ref, inject } from "vue";
 import MessageBar from "@/components/MessageBar.vue";
 
-let selectedChat = ref('');
+let selectedChat = ref("");
 let user = inject("userDoc");
 let logged_in = inject("logged_in");
 
